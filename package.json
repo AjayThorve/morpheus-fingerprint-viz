@@ -1,0 +1,26 @@
+{
+  "name": "morpheus-fingerprint-viz",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "./install-node-rapids.sh"
+  },
+  "dependencies": {
+    "@deck.gl/carto": "8.7.12",
+    "@deck.gl/core": "8.7.12",
+    "@deck.gl/layers": "8.7.12",
+    "@deck.gl/react": "8.7.12",
+    "apache-arrow": "8.0.0",
+    "next": "12.2.2",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "eslint": "8.20.0",
+    "eslint-config-next": "12.2.2"
+  }
+}
