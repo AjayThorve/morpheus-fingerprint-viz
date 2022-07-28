@@ -21,10 +21,76 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #262829;
+  background: black !important;
 }
 
 .deck-tooltip {
   font-size: 0.8em;
   font-family: Helvetica, Arial, sans-serif;
+}
+
+#hexgrid {
+  padding-top: 0px;
+  width: 1600px;
+  height: 1005px;
+  /* overflow-y: auto;
+  overflow-x: auto; */
+}
+
+#area {
+  width: 1800px;
+  height: 160px;
+}
+
+.partition {
+  border: none;
+  border-top: 3px double #333;
+  color: #333;
+  overflow: visible;
+  text-align: center;
+  height: 5px;
+}
+
+#sidePanel {
+  margin-top: -200px;
+  border-color: #333;
+  border-style: double;
+  width: 350px;
+  height: 835px;
+}
+
+.topnav {
+  background-color: #333;
+  overflow: hidden;
+  border-bottom-color: black;
+  border-bottom-style: double;
+}
+
+.topnav a,
+.customHeader {
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.selectedEvent {
+  color: green;
+
+}
+
+#anomalyNumber {
+  font-size: 30px;
+  margin-left: 110px;
+}
+
+.customHeader {
+  font-size: 20px
+}
+
+.listOfAttributes {
+  background-color: black !important;
 }

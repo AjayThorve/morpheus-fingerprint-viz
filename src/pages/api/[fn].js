@@ -13,19 +13,24 @@ async function sendDF(df, res){
     );
 }
 
-const max_t = 10;
+const max_t = 20;
 const min_t = 1;
 
 const unique_ips = [
-    "10.33.x", "10.33.y", "10.33.z", "10.33.a", "10.33.b", "10.33.c", "10.33.d", "10.33.e", "10.33.f", "10.33.g", "10.33.h",
-    "10.33.i", "10.33.j", "10.33.k", "10.33.l", "10.33.m", "10.33.n", "10.33.o", "10.33.p", "10.33.q", "10.33.r", "10.33.s"
+    "10.33.242.x", "10.33.242.y", "10.33.242.z", "10.33.242.a", "10.33.242.b", "10.33.242.c", "10.33.242.d", "10.33.242.e", "10.33.242.f", "10.33.242.g", "10.33.242.h",
+    "10.33.242.i", "10.33.242.j", "10.33.242.k", "10.33.242.l", "10.33.242.m", "10.33.242.n", "10.33.242.o", "10.33.242.p", "10.33.242.q", "10.33.242.r", "10.33.242.s"
+]
+
+const unique_locations = [
+    "Paris", "Bangkok", "Mumbai", "Seattle", "San Jose", "London", "New York", "Dubai", "Istanbul", "Tokyo", "Hyderabad"
 ]
 
 const data = symmetricDataGrid(
     new DataFrame({
-        "ip": [].concat(...Array(60).fill(unique_ips)),
-        "time": Array.from({length: 60*unique_ips.length}, () => Math.floor(Math.random()*(max_t-min_t+1)+min_t)),
-        "anomalyScore": Array.from({length: 60*unique_ips.length}, () => Math.random()),
+        "ip": [].concat(...Array(120).fill(unique_ips)),
+        "location": [].concat(...Array(240).fill(unique_locations)),
+        "time": Array.from({length: 120*unique_ips.length}, () => Math.floor(Math.random()*(max_t-min_t+1)+min_t)),
+        "anomalyScore": Array.from({length: 120*unique_ips.length}, () => Math.random()),
     })
 )
 
@@ -36,9 +41,6 @@ function symmetricDataGrid(df){
     let d = {ip:[], time:[], anomalyScore:[]};
 
     [...iptimeGroup.get('ip_time')].forEach((v, i) => {
-        if(v.ip == "10.33.z"){
-            console.log(v, i);
-        }
         const maxEventCountIP = df.filter(df.get('time').eq(v.time)).groupBy({by: 'ip'}).count().get('time').max();
         let nrows = maxEventCountIP - EventCounts[i];
         if(nrows > 0){
@@ -84,19 +86,7 @@ function createGridCoords(df, hexRadius=30){
 
 export default async function handler(req, res) {
     const fn = req.query.fn;
-    if(fn == "readCoordinates"){
-        const data = {
-            "x": [],
-            "y": [],
-        }        
-        const event = req.query.event ? parseInt(req.query.event) : 1;
-        d3.hexbin().extent([[0,0],[event,100]]).radius(1).centers().map(([x,y], i)=> {
-            data.x.push(x);
-            data.y.push(y);
-        });
-        const df = new DataFrame({'positions': new DataFrame(data).interleaveColumns()});
-        await sendDF(df, res);
-    }else if(fn == "getUniqueIPs") {
+    if(fn == "getUniqueIPs") {
         res.send({'ip': [...data.get('ip').unique().sortValues(true)]});
     }else if(fn == "getDF"){
         let offsetX = req.query.offsetX ? parseInt(req.query.offsetX) : 0;
@@ -107,14 +97,30 @@ export default async function handler(req, res) {
         for(let i = Math.max(time-2, 1); i<=time; i++){
             let tempDataMask = data.get('time').eq(i);
             let tempData = data.filter(tempDataMask);
+            if(tempData.numRows == 0){
+                continue;
+            }
             if(!finalData){
                 finalData = tempData;
             }else{
                 finalData = finalData.concat(tempData);
             }
         }
-        finalData = createGridCoords(finalData, hexRadius);
-        finalData = finalData.assign({'x': finalData.get('x').add(offsetX), 'y': finalData.get('y').add(offsetY)});
-        res.send({data: finalData.toArrow().toArray(), maxY: finalData.get('y').max()})
+        if(finalData.numRows > 0){
+            finalData = createGridCoords(finalData, hexRadius);
+            finalData = finalData.assign({'x': finalData.get('x').add(offsetX), 'y': finalData.get('y').add(offsetY)});
+        }
+        
+        const events = data.filter(data.get('time').eq(time));
+        res.send(
+            {
+                data: finalData.toArrow().toArray(),
+                maxY: finalData.get('y').max(),
+                totalEvents: events.numRows - events.get('anomalyScore').nullCount,
+                totalAnomalousEvents: events.filter(events.get('anomalyScore').ge(0.75)).numRows
+            }
+        )
+    }else if(fn == "getTotalTime"){
+        res.send(data.get('time').unique().length);
     }
 }

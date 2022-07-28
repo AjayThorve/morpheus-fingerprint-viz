@@ -20,7 +20,10 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "d3-hexbin": "0.2.2",
-    "d3": "7.6.1"
+    "d3": "7.6.1",
+    "@observablehq/plot": "0.5.2",
+    "react-bootstrap": "2.4.0",
+    "bootstrap": "5.2.0"
   },
   "devDependencies": {
     "eslint": "8.20.0",
