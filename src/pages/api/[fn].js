@@ -1,3 +1,5 @@
+import { PassThrough } from 'stream';
+
 const { RecordBatchStreamWriter } = require('@rapidsai/apache-arrow');
 const pipeline = require('util').promisify(require('stream').pipeline);
 const d3 = require('d3-hexbin');
@@ -11,25 +13,53 @@ async function sendDF(df, res){
     );
 }
 
-function createGridCoords(df, hexRadius=20){
-    const rows = df.get('ip').encodeLabels().nunique();
-    const columns = df.groupBy({by: 'ip'}).count();
-    let max = columns.get('time').max();
-    let d = {ip:[], anomalyScore: [], time: []};
-    
-    let columnsArr = columns.get('ip');
-    [...columnsArr].forEach((v, i) => {
-        if(max > columns.get('time').getValue(i)){
-            let nrows = max - columns.get('time').getValue(i);
-            d.ip.push(...Array(nrows).fill(v));
-            d.anomalyScore.push(...Array(nrows).fill(0));
-            d.time.push(...Array(nrows).fill(0));
+const max_t = 10;
+const min_t = 1;
+
+const unique_ips = [
+    "10.33.x", "10.33.y", "10.33.z", "10.33.a", "10.33.b", "10.33.c", "10.33.d", "10.33.e", "10.33.f", "10.33.g", "10.33.h",
+    "10.33.i", "10.33.j", "10.33.k", "10.33.l", "10.33.m", "10.33.n", "10.33.o", "10.33.p", "10.33.q", "10.33.r", "10.33.s"
+]
+
+const data = symmetricDataGrid(
+    new DataFrame({
+        "ip": [].concat(...Array(60).fill(unique_ips)),
+        "time": Array.from({length: 60*unique_ips.length}, () => Math.floor(Math.random()*(max_t-min_t+1)+min_t)),
+        "anomalyScore": Array.from({length: 60*unique_ips.length}, () => Math.random()),
+    })
+)
+
+function symmetricDataGrid(df){
+    const iptimeGroup = df.groupBy({by: ['ip', 'time']}).count();
+    const EventCounts = [...iptimeGroup.get('anomalyScore')];
+
+    let d = {ip:[], time:[], anomalyScore:[]};
+
+    [...iptimeGroup.get('ip_time')].forEach((v, i) => {
+        if(v.ip == "10.33.z"){
+            console.log(v, i);
+        }
+        const maxEventCountIP = df.filter(df.get('time').eq(v.time)).groupBy({by: 'ip'}).count().get('time').max();
+        let nrows = maxEventCountIP - EventCounts[i];
+        if(nrows > 0){
+            d.ip.push(...Array(nrows).fill(v.ip));
+            d.anomalyScore.push(...Array(nrows).fill(null));
+            d.time.push(...Array(nrows).fill(v.time));
         }
     })
-
     if(d.ip.length > 0){
         df = df.concat(new DataFrame(d));
     }
+   
+    return df;
+}
+
+
+function createGridCoords(df, hexRadius=30){
+    const rows = df.get('ip').encodeLabels().nunique();
+    let max = df.groupBy({by: 'ip'}).count().get('time').max();
+
+    df = df.sortValues({ip: {ascending: true, null_order: 'after'}});
     var points = {
         x: [],
         y: []
@@ -50,19 +80,6 @@ function createGridCoords(df, hexRadius=20){
     return df.assign(points);
 }
 
-const max_t = 5;
-const min_t = 1;
-let tx = [];
-d3.hexbin().extent([[0,0],[1,98]]).radius(1).centers().map(([x,y], i)=> {
-    tx.push(y);
-});
-
-console.log(tx);
-const data = new DataFrame({
-    "ip": [].concat(...Array(33).fill(["10.33.x", "10.33.y", "10.33.z"])),
-    "time": Array.from({length: 99}, () => Math.floor(Math.random()*(max_t-min_t+1)+min_t)),
-    "anomalyScore": Array.from({length: 99}, () => Math.random()),
-});
 
 
 export default async function handler(req, res) {
@@ -79,23 +96,25 @@ export default async function handler(req, res) {
         });
         const df = new DataFrame({'positions': new DataFrame(data).interleaveColumns()});
         await sendDF(df, res);
-    }else if(fn == "readIP") {
-        const df = data.select(['ip', 'ipPosX', 'ipPosY']);
-        res.send(df.toArrow().toArray());
+    }else if(fn == "getUniqueIPs") {
+        res.send({'ip': [...data.get('ip').unique().sortValues(true)]});
     }else if(fn == "getDF"){
-        const offsetX = req.query.offsetX ? parseInt(req.query.offsetX) : 0;
+        let offsetX = req.query.offsetX ? parseInt(req.query.offsetX) : 0;
         const offsetY = req.query.offsetY ? parseInt(req.query.offsetY) : 0;
         const time = req.query.time ? parseInt(req.query.time) : null;
-        let tempData = data;
-        if(time){
-            const tempDataMask = tempData.get('time').eq(time).logicalOr(tempData.get('time').eq(0));
-            tempData = tempData.filter(tempDataMask);
+        const hexRadius = req.query.hexRadius ? parseInt(req.query.hexRadius) : 30;
+        let finalData = null;
+        for(let i = Math.max(time-2, 1); i<=time; i++){
+            let tempDataMask = data.get('time').eq(i);
+            let tempData = data.filter(tempDataMask);
+            if(!finalData){
+                finalData = tempData;
+            }else{
+                finalData = finalData.concat(tempData);
+            }
         }
-        console.log(tempData.toArrow().toArray(), tempData.numRows, createGridCoords(data));
-        tempData = createGridCoords(tempData);
-        console.log(tempData);
-        tempData = tempData.assign({'x': tempData.get('x').add(offsetX), 'y': tempData.get('y').add(offsetY)})
-
-        res.send(tempData.toArrow().toArray())
+        finalData = createGridCoords(finalData, hexRadius);
+        finalData = finalData.assign({'x': finalData.get('x').add(offsetX), 'y': finalData.get('y').add(offsetY)});
+        res.send({data: finalData.toArrow().toArray(), maxY: finalData.get('y').max()})
     }
 }
