@@ -78,7 +78,7 @@ export default async function handler(req, res) {
         const time = req.query.time ? parseInt(req.query.time) : null;
         const hexRadius = req.query.hexRadius ? parseInt(req.query.hexRadius) : 30;
         let finalData = null;
-        for(let i = Math.max(time-7, 1); i<=time; i++){
+        for(let i = Math.max(time-8, 1); i<=time; i++){
             let tempDataMask = data.get('time').eq(i);
             let tempData = data.filter(tempDataMask);
 

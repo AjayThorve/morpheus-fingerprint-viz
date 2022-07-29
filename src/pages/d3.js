@@ -151,7 +151,7 @@ export default class CustomD3 extends React.Component{
                 drawAxis(this.svg, data.maxY, this.hexRadius, this.offsetY);
                 axisAdded = true;
             }
-            await timeout(1000); //for 5 sec delay
+            await timeout(5000); //for 5 sec delay
         }
     }
 
