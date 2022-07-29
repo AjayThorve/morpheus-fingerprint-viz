@@ -13,42 +13,27 @@ async function sendDF(df, res){
     );
 }
 
-const max_t = 20;
-const min_t = 1;
-
-const unique_ips = [
-    "10.33.242.x", "10.33.242.y", "10.33.242.z", "10.33.242.a", "10.33.242.b", "10.33.242.c", "10.33.242.d", "10.33.242.e", "10.33.242.f", "10.33.242.g", "10.33.242.h",
-    "10.33.242.i", "10.33.242.j", "10.33.242.k", "10.33.242.l", "10.33.242.m", "10.33.242.n", "10.33.242.o", "10.33.242.p", "10.33.242.q", "10.33.242.r", "10.33.242.s"
-]
-
-const unique_locations = [
-    "Paris", "Bangkok", "Mumbai", "Seattle", "San Jose", "London", "New York", "Dubai", "Istanbul", "Tokyo", "Hyderabad"
-]
-
 const data = symmetricDataGrid(
-    new DataFrame({
-        "ip": [].concat(...Array(120).fill(unique_ips)),
-        "location": [].concat(...Array(240).fill(unique_locations)),
-        "time": Array.from({length: 120*unique_ips.length}, () => Math.floor(Math.random()*(max_t-min_t+1)+min_t)),
-        "anomalyScore": Array.from({length: 120*unique_ips.length}, () => Math.random()),
+    DataFrame.readParquet({
+        sourceType: 'files',
+        sources: ['./public/data/test.parquet']
     })
 )
 
 function symmetricDataGrid(df){
-    const iptimeGroup = df.groupBy({by: ['ip', 'time']}).count();
-    const EventCounts = [...iptimeGroup.get('anomalyScore')];
+    let d = {ip:[], time:[]};
 
-    let d = {ip:[], time:[], anomalyScore:[]};
-
-    [...iptimeGroup.get('ip_time')].forEach((v, i) => {
-        const maxEventCountIP = df.filter(df.get('time').eq(v.time)).groupBy({by: 'ip'}).count().get('time').max();
-        let nrows = maxEventCountIP - EventCounts[i];
-        if(nrows > 0){
-            d.ip.push(...Array(nrows).fill(v.ip));
-            d.anomalyScore.push(...Array(nrows).fill(null));
-            d.time.push(...Array(nrows).fill(v.time));
-        }
-    })
+    [...df.get('ip').unique()].forEach((v) => {
+        [...df.get('time').unique()].forEach((i) => {
+            const maxEventCountIP = df.filter(df.get('time').eq(i)).groupBy({by: 'ip'}).count().get('time').max();
+            const EventCount = df.filter(df.get('time').eq(i).logicalAnd(df.get('ip').matchesRe(v))).numRows;
+            let nrows = maxEventCountIP - EventCount;
+            if(nrows > 0){
+                d.ip.push(...Array(nrows).fill(v));
+                d.time.push(...Array(nrows).fill(i));
+            }
+        });
+    });
     if(d.ip.length > 0){
         df = df.concat(new DataFrame(d));
     }
@@ -58,7 +43,7 @@ function symmetricDataGrid(df){
 
 
 function createGridCoords(df, hexRadius=30){
-    const rows = df.get('ip').encodeLabels().nunique();
+    const rows = data.get('ip').encodeLabels().nunique();
     let max = df.groupBy({by: 'ip'}).count().get('time').max();
 
     df = df.sortValues({ip: {ascending: true, null_order: 'after'}});
@@ -78,7 +63,6 @@ function createGridCoords(df, hexRadius=30){
             points.y.push(y);
         }//for j
     }
-
     return df.assign(points);
 }
 
@@ -94,9 +78,10 @@ export default async function handler(req, res) {
         const time = req.query.time ? parseInt(req.query.time) : null;
         const hexRadius = req.query.hexRadius ? parseInt(req.query.hexRadius) : 30;
         let finalData = null;
-        for(let i = Math.max(time-2, 1); i<=time; i++){
+        for(let i = Math.max(time-7, 1); i<=time; i++){
             let tempDataMask = data.get('time').eq(i);
             let tempData = data.filter(tempDataMask);
+
             if(tempData.numRows == 0){
                 continue;
             }

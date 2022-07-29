@@ -148,7 +148,7 @@ export default class CustomD3 extends React.Component{
                 drawAxis(this.svg, data.maxY, this.hexRadius, this.offsetY);
                 axisAdded = true;
             }
-            await timeout(5000); //for 5 sec delay
+            await timeout(1000); //for 5 sec delay
         }
     }
 
@@ -243,9 +243,10 @@ export default class CustomD3 extends React.Component{
             selectedEvent = (
                 <div>
                     <ListGroup>
-                        <ListGroup.Item className="listOfAttributes" variant="dark"><p className="customHeader">IP Address: <span className="selectedEvent">{this.state.selectedEvent.ip}</span></p></ListGroup.Item>
-                        <ListGroup.Item className="listOfAttributes" variant="dark"><p className="customHeader">Time: <span className="selectedEvent">T-{this.state.selectedEvent.time}</span></p></ListGroup.Item>
-                        <ListGroup.Item className="listOfAttributes"><p className="customHeader">Location: <span className="selectedEvent">{this.state.selectedEvent.location}</span></p></ListGroup.Item>
+                        {Object.keys(this.state.selectedEvent).filter(key => !['x', 'y', 'anomalyScore'].includes(key)).map(
+                            key => <ListGroup.Item className="listOfAttributes" variant="dark" key={key}><p className="customHeader">
+                                    {key}: <span className="selectedEvent">{this.state.selectedEvent[key]}</span></p></ListGroup.Item>)
+                        }
                     </ListGroup>
                 </div>
             )
