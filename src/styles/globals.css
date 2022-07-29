@@ -55,7 +55,7 @@ body {
   margin-top: -200px;
   border-color: #333;
   border-style: double;
-  width: 350px;
+  width: 450px;
   height: 835px;
 }
 
@@ -83,8 +83,8 @@ body {
 }
 
 #anomalyNumber {
-  font-size: 30px;
-  margin-left: 110px;
+  font-size: 35px;
+  margin-left: 180px;
 }
 
 .customHeader {

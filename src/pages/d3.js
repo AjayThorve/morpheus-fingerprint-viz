@@ -18,6 +18,7 @@ function drawArea(areaRef, data){
     const chart = Plot.plot({
         marks: [
           Plot.areaY(data, {x: "time", y: "events", fill: "type"}),
+          Plot.areaY(data, {x: "time", y0: "events", fill: "type"})
         ],
         title: "xtz",
         width: 1750,
@@ -182,7 +183,7 @@ export default class CustomD3 extends React.Component{
           }
         const mousemove = function(d) {
             Tooltip
-                .html("time: " + d.srcElement.__data__.time + "</br>anomaly score: " + d.srcElement.__data__.anomalyScore + "</br>location: " + d.srcElement.__data__.location)
+                .html("time: " + d.srcElement.__data__.time + "</br>anomaly score: " + d.srcElement.__data__.anomalyScore + "</br>location: " + d.srcElement.__data__.locationCity)
                 .style('left', d.pageX + 35 + 'px')
                 .style('top', d.pageY + 'px')
             }
@@ -240,12 +241,28 @@ export default class CustomD3 extends React.Component{
         let selectedEvent;
         let anomalyScore;
         if(this.state.selectedEvent.ip){
+            console.log(this.state.selectedEvent);
+            const events = []
+            if(this.state.selectedEvent.anomalousAttributes){
+                this.state.selectedEvent.anomalousAttributes.split(',').forEach(key => {
+                    events.push(key);
+                });
+            }
+            window.sevent = this.state.selectedEvent;
             selectedEvent = (
                 <div>
                     <ListGroup>
-                        {Object.keys(this.state.selectedEvent).filter(key => !['x', 'y', 'anomalyScore'].includes(key)).map(
+                        {['ip', 'time'].map(
                             key => <ListGroup.Item className="listOfAttributes" variant="dark" key={key}><p className="customHeader">
-                                    {key}: <span className="selectedEvent">{this.state.selectedEvent[key]}</span></p></ListGroup.Item>)
+                                    {key}:     <span className="selectedEvent">{this.state.selectedEvent[key]}</span></p></ListGroup.Item>)
+                        }
+                    </ListGroup>
+                    <ListGroup>
+                        <p className="customHeader">Malicious Attributes</p>
+                        <br></br><hr className="partition"></hr>
+                        {events.map(
+                            key => <ListGroup.Item className="listOfAttributes" variant="dark" key={key}><p className="customHeader">
+                                    {key}:     <span className="selectedEvent">{this.state.selectedEvent[key]}</span></p></ListGroup.Item>)
                         }
                     </ListGroup>
                 </div>

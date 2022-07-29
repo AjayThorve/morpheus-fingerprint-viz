@@ -102,7 +102,7 @@ export default async function handler(req, res) {
                 data: finalData.toArrow().toArray(),
                 maxY: finalData.get('y').max(),
                 totalEvents: events.numRows - events.get('anomalyScore').nullCount,
-                totalAnomalousEvents: events.filter(events.get('anomalyScore').ge(0.75)).numRows
+                totalAnomalousEvents: events.filter(events.get('anomalyScore').ge(0.6)).numRows
             }
         )
     }else if(fn == "getTotalTime"){
