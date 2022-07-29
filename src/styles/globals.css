@@ -31,32 +31,30 @@ body {
 
 #hexgrid {
   padding-top: 0px;
-  width: 1600px;
-  height: 1005px;
+  width: 1500px;
+  height: 720px;
   /* overflow-y: auto;
   overflow-x: auto; */
 }
 
 #area {
-  width: 1800px;
+  width: 1900px;
   height: 160px;
+}
+
+#sidePanel {
+  overflow-y: auto;
+  width: 350px;
+  height: 720px;
 }
 
 .partition {
   border: none;
-  border-top: 3px double #333;
+  border-top: 3px double #f2f2f2;
   color: #333;
   overflow: visible;
   text-align: center;
   height: 5px;
-}
-
-#sidePanel {
-  margin-top: -200px;
-  border-color: #333;
-  border-style: double;
-  width: 450px;
-  height: 835px;
 }
 
 .topnav {
@@ -77,13 +75,19 @@ body {
   font-weight: bold;
 }
 
+.selectedEventTitle {
+  color: #f2f2f2;
+  font-size: 17px;
+  font-weight: bold;
+}
+
 .selectedEvent {
   color: green;
 
 }
 
 #anomalyNumber {
-  font-size: 35px;
+  font-size: 30px;
   margin-left: 180px;
 }
 
@@ -93,4 +97,9 @@ body {
 
 .listOfAttributes {
   background-color: black !important;
+}
+
+#legend {
+  margin-top: 30px;
+  height: 70px;
 }

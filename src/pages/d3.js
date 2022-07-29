@@ -21,7 +21,7 @@ function drawArea(areaRef, data){
           Plot.areaY(data, {x: "time", y0: "events", fill: "type"})
         ],
         title: "xtz",
-        width: 1750,
+        width: 1900,
         height: 110,
         style: {
             "background-color": "black",
@@ -89,10 +89,11 @@ function drawLegend(svgRef){
             label: "Anomaly Score"
         },
         width: 280,
-        height: 70,
+        height: 30,
         marginLeft: 25,
+        marginBottom: 0,
         paddingBottom: 0,
-        swatchSize: 24,
+        swatchSize: 11,
         style: {
             "color": "white",
             fontSize: "14px",
@@ -131,6 +132,7 @@ export default class CustomD3 extends React.Component{
         const totalTime = parseInt(await requestJSON("getTotalTime"));
         drawLegend(this.legendRef);
         let axisAdded = false;
+        await timeout(5000); //for 5 sec delay
         for(let i=1; i<=totalTime; i++){
             const data = await requestJSON("getDF", `offsetX=${this.offsetX}&offsetY=${this.offsetY}&time=${i}&hexRadius=${this.hexRadius}`);
             this.points.push({
@@ -240,30 +242,32 @@ export default class CustomD3 extends React.Component{
     render() {
         let selectedEvent;
         let anomalyScore;
-        if(this.state.selectedEvent.ip){
-            console.log(this.state.selectedEvent);
+        let maliciousHeader;
+        let maliciousFooter;
+        if(this.state.selectedEvent.anomalyScore || this.state.selectedEvent.anomalyScore == 0){
             const events = []
             if(this.state.selectedEvent.anomalousAttributes){
                 this.state.selectedEvent.anomalousAttributes.split(',').forEach(key => {
                     events.push(key);
                 });
+                maliciousHeader =  <div><span className="customHeader">Malicious Attributes</span></div>
+                maliciousFooter = <hr className="partition"></hr>
             }
-            window.sevent = this.state.selectedEvent;
             selectedEvent = (
                 <div>
+                    <hr className="partition"></hr>
                     <ListGroup>
                         {['ip', 'time'].map(
-                            key => <ListGroup.Item className="listOfAttributes" variant="dark" key={key}><p className="customHeader">
-                                    {key}:     <span className="selectedEvent">{this.state.selectedEvent[key]}</span></p></ListGroup.Item>)
+                            key => <ListGroup.Item className="listOfAttributes" variant="dark" key={key}><span className="selectedEventTitle">
+                                    {key}:     <span className="selectedEvent">{this.state.selectedEvent[key]}</span></span></ListGroup.Item>)
                         }
-                    </ListGroup>
-                    <ListGroup>
-                        <p className="customHeader">Malicious Attributes</p>
-                        <br></br><hr className="partition"></hr>
+                        <hr className="partition"></hr>
+                        {maliciousHeader}
                         {events.map(
-                            key => <ListGroup.Item className="listOfAttributes" variant="dark" key={key}><p className="customHeader">
-                                    {key}:     <span className="selectedEvent">{this.state.selectedEvent[key]}</span></p></ListGroup.Item>)
+                            key => <ListGroup.Item className="listOfAttributes" variant="dark" key={key}><span className="selectedEventTitle">
+                                    {key}:     <span className="selectedEvent">{this.state.selectedEvent[key]}</span></span></ListGroup.Item>)
                         }
+                        {maliciousFooter}
                     </ListGroup>
                 </div>
             )
@@ -276,19 +280,15 @@ export default class CustomD3 extends React.Component{
                   {/* <button id="play-button" className="active" onClick={}>Play</button> */}
                 </div>
                 <div id="area" ref={this.areaRef}></div>
-                <hr className="partition"></hr>
-                <Stack direction="horizontal" gap={10}>
+                <Stack direction="horizontal" gap={1}>
                     <div id="hexgrid">
                         <svg ref={this.svg}></svg>
                         <div id="tooltip" ref={this.tooltipRef}></div>
                     </div>
                 
                     <div id="sidePanel">
-                        <span className="customHeader">{anomalyScore}</span>
-                            <svg ref={this.legendRef}></svg>
-                            <br></br><hr className="partition"></hr>
+                            <svg id="legend" ref={this.legendRef}></svg>
                         {selectedEvent}
-                        <br></br><hr className="partition"></hr>
                     </div>
                 </Stack>
             </div>
