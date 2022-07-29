@@ -250,7 +250,14 @@ export default class CustomD3 extends React.Component{
                 this.state.selectedEvent.anomalousAttributes.split(',').forEach(key => {
                     events.push(key);
                 });
-                maliciousHeader =  <div><span className="customHeader">Malicious Attributes</span></div>
+                maliciousHeader =  (
+                <span><span className="customHeader">Malicious Attributes</span>
+                </span>
+                )
+                anomalyScore = (
+                    <ListGroup.Item className="listOfAttributes" variant="dark" key={'anomalyScore'}><span className="selectedEventTitle">
+                    anomalyScore: <span className="selectedEvent">{Math.round(this.state.selectedEvent['anomalyScore']*100)/100}</span></span></ListGroup.Item>
+                )
                 maliciousFooter = <hr className="partition"></hr>
             }
             selectedEvent = (
@@ -263,6 +270,7 @@ export default class CustomD3 extends React.Component{
                         }
                         <hr className="partition"></hr>
                         {maliciousHeader}
+                        {anomalyScore}
                         {events.map(
                             key => <ListGroup.Item className="listOfAttributes" variant="dark" key={key}><span className="selectedEventTitle">
                                     {key}:     <span className="selectedEvent">{this.state.selectedEvent[key]}</span></span></ListGroup.Item>)
