@@ -5,6 +5,7 @@ import * as Plot from "@observablehq/plot";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Stack from 'react-bootstrap/Stack';
 import ListGroup from 'react-bootstrap/ListGroup';
+import Box from './index';
 
 async function requestJSON(type='getDF', params=null){
     let url = `/api/${type}?`;
@@ -132,7 +133,7 @@ export default class CustomD3 extends React.Component{
         const totalTime = parseInt(await requestJSON("getTotalTime"));
         drawLegend(this.legendRef);
         let axisAdded = false;
-        await timeout(5000); //for 5 sec delay
+        await timeout(1000); //for 5 sec delay
         for(let i=1; i<=totalTime; i++){
             const data = await requestJSON("getDF", `offsetX=${this.offsetX}&offsetY=${this.offsetY}&time=${i}&hexRadius=${this.hexRadius}`);
             this.points.push({
@@ -151,7 +152,7 @@ export default class CustomD3 extends React.Component{
                 drawAxis(this.svg, data.maxY, this.hexRadius, this.offsetY);
                 axisAdded = true;
             }
-            await timeout(5000); //for 5 sec delay
+            await timeout(1000); //for 5 sec delay
         }
     }
 
@@ -232,7 +233,7 @@ export default class CustomD3 extends React.Component{
         .attr("transform", function(d) { 
           return "translate(" + d.x + "," + d.y + ")"; 
         })  
-        .style("fill", (d) => d.anomalyScore === null ? 'grey' : color(d.anomalyScore))
+        .style("fill", (d) => d.anomalyScore === null ? 'black' : color(d.anomalyScore))
         .on("mouseover", mouseover)
         .on("click", mouseclick)
         .on("mousemove", mousemove)
@@ -288,9 +289,10 @@ export default class CustomD3 extends React.Component{
                   {/* <button id="play-button" className="active" onClick={}>Play</button> */}
                 </div>
                 <div id="area" ref={this.areaRef}></div>
+                <Box />
                 <Stack direction="horizontal" gap={1}>
                     <div id="hexgrid">
-                        <svg ref={this.svg}></svg>
+                        {/* <svg ref={this.svg}></svg> */}
                         <div id="tooltip" ref={this.tooltipRef}></div>
                     </div>
                 
