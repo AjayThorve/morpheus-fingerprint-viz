@@ -9,7 +9,7 @@ body {
 
 #xyz {
   /* margin-top: 200px; */
-  background: rgb(221, 208, 208) !important;
+  background: rgb(0, 0, 0) !important;
 }
 
 a {
@@ -47,10 +47,16 @@ body {
   height: 160px;
 }
 
+.wordWrap {
+  word-wrap: break-word;
+  width: 10px;
+}
+
 #sidePanel {
   overflow-y: auto;
   width: 350px;
   height: 720px;
+  border-left: 3px double #333;
 }
 
 .partition {

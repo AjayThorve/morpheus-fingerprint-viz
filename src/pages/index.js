@@ -17,6 +17,15 @@ async function requestData(type='getDF', params=null){
   return table;
 }
 
+async function requestJSON(type='getInstanceData', params=null){
+  let url = `/api/three/${type}?`;
+  if(params!=null){
+      url += `${params}`;
+  }
+  return await fetch(url, {method: 'GET', 'headers': {'Access-Control-Allow-Origin': "*"}}).then(res => res.json());
+}
+
+
 class HexGrid extends React.Component{ 
   constructor(props){
     super(props);
@@ -27,11 +36,7 @@ class HexGrid extends React.Component{
       cols: props.cols,
       hexRadius: props.hexRadius,
       position: new Float32Array([]),
-      colors: new Float32Array([
-        1 * Math.random(), 0.0039 * Math.random(), 1 * Math.random(),
-        1 * Math.random(), 1 * Math.random(), 1 * Math.random(),
-        1 * Math.random(), 1 * Math.random(), 1 * Math.random(),
-    ]),
+      colors: new Float32Array([]),
       selectedInstance: null,
       event: 1,
       repeatfn: null
@@ -58,17 +63,13 @@ class HexGrid extends React.Component{
         colors: colors.batches[0].data.children[0].values,
         event: this.state.event + 1
       });
-      // this.myMesh.current.instanceColor = new THREE.InstancedBufferAttribute(this.state.colors, 3);
-      // this.myMesh.current.setColorAt(0, new THREE.Color("orange"));
-      // this.myMesh.current.instanceColor.needsUpdate = true;
-
       this.myMesh.current.instanceMatrix = new THREE.InstancedBufferAttribute(this.state.position, 16);
 
     }
   }
 
   async componentDidMount(){
-    this.state.repeatfn = setInterval(() => this.resetData(), 1000);
+    this.state.repeatfn = setInterval(() => this.resetData(), this.props.waitTime);
 
     if(this.myMesh.current){
       this.myMesh.current.geometry.translate(200 - window.innerWidth/2,0.5,200 - window.innerHeight/2);
@@ -80,12 +81,12 @@ class HexGrid extends React.Component{
     return (
       <instancedMesh
         ref={this.myMesh}
-        args={[null, null, 260]}
-        onClick={(e) => console.log(e)}
-        onPointerMove={(e) => {
+        args={[null, null, this.state.rows * this.state.cols]}
+        onClick={async(e) => {
           e.stopPropagation();
           const id = e.instanceId;
-          
+          const result = await requestJSON('getInstanceData', `time=${this.state.event}&id=${id}`);
+          console.log(result);
         }}
       >
         <cylinderGeometry  attach="geometry"
@@ -120,7 +121,7 @@ export default class Box extends React.Component{
     this.setState({
       args: [window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, -5000, 5000]
     })
-    await timeout(1000); //for 5 sec delay
+    await timeout(this.props.waitTime); //for 5 sec delay
   }
   render(){
     const camera = <OrthographicCamera makeDefault zoom={1}
@@ -133,14 +134,7 @@ export default class Box extends React.Component{
         {camera}
           <ambientLight color={0x002288}/>
           <directionalLight position={[200,200,-1]} color={0xffffff}/>
-          <HexGrid rows={10} cols={5} hexRadius={20} />
-          {/* <OrbitControls></OrbitControls> */}
-          {/* <MapControls 
-            screenSpacePanning={true}
-            minDistance={0}
-            maxDistance={5000}
-            maxPolarAngle={Math.PI/2}
-          /> */}
+          <HexGrid rows={20} cols={13} waitTime={this.props.waitTime} hexRadius={20} />
         </Canvas>
       </div>
     );

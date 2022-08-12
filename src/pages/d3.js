@@ -5,7 +5,7 @@ import * as Plot from "@observablehq/plot";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Stack from 'react-bootstrap/Stack';
 import ListGroup from 'react-bootstrap/ListGroup';
-import Box from './index';
+// import Box from './index';
 
 async function requestJSON(type='getDF', params=null){
     let url = `/api/${type}?`;
@@ -15,34 +15,66 @@ async function requestJSON(type='getDF', params=null){
     return await fetch(url, {method: 'GET', 'headers': {'Access-Control-Allow-Origin': "*"}}).then(res => res.json());
 }
 
-function drawArea(areaRef, data){
+const IPAddressLookup = ['sgonzalez',
+'ccameron',
+'tanderson',
+'jessicabrewer',
+'abigailstanley',
+'patricia32',
+'stewartlucas',
+'sandra54',
+'cmorris',
+'gonzalezjulia',
+'fhenderson',
+'robinsonricky',
+'michaelpatton',
+'veronicalopez',
+'ann22',
+'swilliams',
+'julie57',
+'aberg',
+'richard26',
+'robertsondonna']
+
+function drawArea(areaRef, data, maxTime){
     const chart = Plot.plot({
         marks: [
           Plot.areaY(data, {x: "time", y: "events", fill: "type"}),
           Plot.areaY(data, {x: "time", y0: "events", fill: "type"})
         ],
         title: "xtz",
-        width: 1900,
-        height: 110,
+        width: 1790,
+        height: 140,
         style: {
             "background-color": "black",
             "color": "white",
-            "font-size": 13,
-            "margin-left": "20px",
+            "font-size": "14px",
+            "margin-left": "80px",
             "padding-top": 0,
         },
         y: {
             axis: true,
-            label: null
+            label: "TRAFFIC →",
+            tickSize: "0",
+            tickFormat: d => ``,
+            labelAnchor: "center",
+            // labelOffset: "10",
         },
         x: {
-            type: "point",
-            tickFormat: d => `T-${d*5}`,
-            label: null,
-            tickRotate: -90
+            // axis: false,
+            type: "log",
+            tickFormat: d => ``,
+            label: `TIME →`,
+            tickSize: "0",
+            labelOffset: "24",
+            labelAnchor: "left",
+            className: "xAxislabel",
+            // transform: "'translate(140,0)'",
+            // tickRotate: -60,
+            reverse: true
         },
         color: {
-            range: ["#21918c", "#440154"],
+            range: ["#440154", "#1f1d1d"],
             legend: true, 
             legendAnchor: "center",
             style: {
@@ -52,6 +84,7 @@ function drawArea(areaRef, data){
             }
         }
       });
+      console.log(d3.selectAll(".xAxislabel"));
       d3.selectAll("div > div#area > *").remove();
       if(areaRef.current){
         areaRef.current.append(chart);
@@ -60,19 +93,39 @@ function drawArea(areaRef, data){
 
 async function drawAxis(svgRef, maxY, hexRadius, offsetY){
     const svg = d3.select(svgRef.current);
-    const IPs = (await requestJSON('getUniqueIPs'))['ip'];
+    // const IPs = (await requestJSON('getUniqueIDs'))['userID'];
     const yScale = d3.scaleBand()
         .range([offsetY - hexRadius, maxY + hexRadius])
-        .domain(IPs)
+        .domain(IPAddressLookup)
         .padding(0.05)
 
         svg
         .append("g")
-        .attr("transform", `translate(${190 - hexRadius},0)`)
-        .style('font-size', hexRadius-4)
+        .attr("transform", `translate(${190 - hexRadius},3)`)
+        .style('font-size', hexRadius-6)
         .style('color', "white")
         .call(d3.axisLeft(yScale).tickSize(0))
         .select(".domain").remove()
+
+        svg
+        .append("text")
+        .attr("transform", `translate(${190 - hexRadius},0)`)
+        .style('font-size', 16)
+        .style('font-weight', "bold")
+        .style('fill', "white")
+        .attr("text-anchor", "end")
+        .attr("y", 44)
+        .text("USER NAME")
+
+       svg
+        .append("text")
+        .attr("transform", `translate(${265 - hexRadius},0)`)
+        .style('font-size', 16)
+        .style('font-weight', "bold")
+        .style('fill', "white")
+        .attr("text-anchor", "end")
+        .attr("y", 44)
+        .text("TIME →")
 }
 
 function drawLegend(svgRef){
@@ -146,7 +199,7 @@ export default class CustomD3 extends React.Component{
                 events: data.totalEvents,
                 type: 'totalEvents'
             });
-            drawArea(this.areaRef, this.points);
+            drawArea(this.areaRef, this.points, i);
             this.drawChart(this.svg, this.tooltipRef, data.data, this.hexRadius, this.hexgridWidth, this.hexgridHeight);
             if(!axisAdded){
                 drawAxis(this.svg, data.maxY, this.hexRadius, this.offsetY);
@@ -209,7 +262,7 @@ export default class CustomD3 extends React.Component{
         
         let hexbin = d3hex.hexbin()
         .size([1000, 1000])
-        .radius(hexRadius-2);
+        .radius(hexRadius-4);
     
     
         const color = d3.scaleSequential()
@@ -225,6 +278,7 @@ export default class CustomD3 extends React.Component{
         .attr("height", height + margin.top + margin.bottom)
             
         svg
+        .append("g")
         .selectAll(".hex")
         .data(points)
         .enter().append("path")
@@ -233,7 +287,7 @@ export default class CustomD3 extends React.Component{
         .attr("transform", function(d) { 
           return "translate(" + d.x + "," + d.y + ")"; 
         })  
-        .style("fill", (d) => d.anomalyScore === null ? 'black' : color(d.anomalyScore))
+        .style("fill", (d) => d.anomalyScore === null ? '#1f1d1d' : color(d.anomalyScore))
         .on("mouseover", mouseover)
         .on("click", mouseclick)
         .on("mousemove", mousemove)
@@ -265,7 +319,7 @@ export default class CustomD3 extends React.Component{
                 <div>
                     <hr className="partition"></hr>
                     <ListGroup>
-                        {['ip', 'time'].map(
+                        {['userID', 'time'].map(
                             key => <ListGroup.Item className="listOfAttributes" variant="dark" key={key}><span className="selectedEventTitle">
                                     {key}:     <span className="selectedEvent">{this.state.selectedEvent[key]}</span></span></ListGroup.Item>)
                         }
@@ -285,14 +339,14 @@ export default class CustomD3 extends React.Component{
         return (
             <div id="chart">
                 <div className="topnav">
-                  <a href="#home">DIGITAL FINGER PRINT | MORPHEUS</a>
+                  <a href="#home">DIGITAL FINGER PRINT | NVIDIA MORPHEUS</a>
                   {/* <button id="play-button" className="active" onClick={}>Play</button> */}
                 </div>
                 <div id="area" ref={this.areaRef}></div>
-                <Box />
+                <hr className="partition"></hr>
                 <Stack direction="horizontal" gap={1}>
                     <div id="hexgrid">
-                        {/* <svg ref={this.svg}></svg> */}
+                        <svg ref={this.svg}></svg>
                         <div id="tooltip" ref={this.tooltipRef}></div>
                     </div>
                 

@@ -16,25 +16,25 @@ async function sendDF(df, res){
 const data = symmetricDataGrid(
     DataFrame.readParquet({
         sourceType: 'files',
-        sources: ['./public/data/test.parquet']
+        sources: ['./public/data/dfp_20_users.parquet']
     })
 )
 
 function symmetricDataGrid(df){
-    let d = {ip:[], time:[]};
+    let d = {userID:[], time:[]};
 
-    [...df.get('ip').unique()].forEach((v) => {
+    [...df.get('userID').unique()].forEach((v) => {
         [...df.get('time').unique()].forEach((i) => {
-            const maxEventCountIP = df.filter(df.get('time').eq(i)).groupBy({by: 'ip'}).count().get('time').max();
-            const EventCount = df.filter(df.get('time').eq(i).logicalAnd(df.get('ip').matchesRe(v))).numRows;
+            const maxEventCountIP = df.filter(df.get('time').eq(i)).groupBy({by: 'userID'}).count().get('time').max();
+            const EventCount = df.filter(df.get('time').eq(i).logicalAnd(df.get('userID').eq(v))).numRows;
             let nrows = maxEventCountIP - EventCount;
             if(nrows > 0){
-                d.ip.push(...Array(nrows).fill(v));
+                d.userID.push(...Array(nrows).fill(v));
                 d.time.push(...Array(nrows).fill(i));
             }
         });
     });
-    if(d.ip.length > 0){
+    if(d.userID.length > 0){
         df = df.concat(new DataFrame(d));
     }
    
@@ -43,10 +43,10 @@ function symmetricDataGrid(df){
 
 
 function createGridCoords(df, hexRadius=30){
-    const rows = data.get('ip').encodeLabels().nunique();
-    let max = df.groupBy({by: 'ip'}).count().get('time').max();
+    const rows = data.get('userID').nunique();
+    let max = df.groupBy({by: 'userID'}).count().get('time').max();
 
-    df = df.sortValues({ip: {ascending: true, null_order: 'after'}});
+    df = df.sortValues({userID: {ascending: true, null_order: 'after'}});
     var points = {
         x: [],
         y: []
@@ -70,15 +70,15 @@ function createGridCoords(df, hexRadius=30){
 
 export default async function handler(req, res) {
     const fn = req.query.fn;
-    if(fn == "getUniqueIPs") {
-        res.send({'ip': [...data.get('ip').unique().sortValues(true)]});
+    if(fn == "getUniqueIDs") {
+        res.send({'userID': [...data.get('userID').unique().sortValues(true)]});
     }else if(fn == "getDF"){
         let offsetX = req.query.offsetX ? parseInt(req.query.offsetX) : 0;
         const offsetY = req.query.offsetY ? parseInt(req.query.offsetY) : 0;
         const time = req.query.time ? parseInt(req.query.time) : null;
         const hexRadius = req.query.hexRadius ? parseInt(req.query.hexRadius) : 30;
         let finalData = null;
-        for(let i = Math.max(time-8, 1); i<=time; i++){
+        for(let i = time; i>=Math.max(time-8, 1); i--){
             let tempDataMask = data.get('time').eq(i);
             let tempData = data.filter(tempDataMask);
 
