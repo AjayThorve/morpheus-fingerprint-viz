@@ -232,7 +232,7 @@ export default class CustomD3 extends React.Component{
                 <hr className="partition"></hr>
                 <Stack direction="horizontal" gap={1}>
                     {/** Renders only 20k, but all 60k are processed and sorted on backend */}
-                    <Box rows={20000} cols={13} waitTime={this.waitTime} />                
+                    <Box rows={20000} cols={13} apiURL={"three-60k"} waitTime={this.waitTime} />                
                     <div id="sidePanel">
                             <svg id="legend" ref={this.legendRef}></svg>
                         {selectedEvent}

@@ -231,7 +231,7 @@ export default class CustomD3 extends React.Component{
                 <div id="area" ref={this.areaRef}></div>
                 <hr className="partition"></hr>
                 <Stack direction="horizontal" gap={1}>
-                    <Box rows={20} cols={13} waitTime={this.waitTime} />                
+                    <Box rows={20} cols={13} apiURL={"three-60k"} waitTime={this.waitTime} />                
                     <div id="sidePanel">
                             <svg id="legend" ref={this.legendRef}></svg>
                         {selectedEvent}

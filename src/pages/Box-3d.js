@@ -8,7 +8,7 @@ import {tableFromIPC} from 'apache-arrow';
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 async function requestData(type='getDF', params=null){
-  let url = `/api/three/${type}?`;
+  let url = `/api/${type}?`;
   if(params!=null){
     url += `${params}`;
   }
@@ -18,7 +18,7 @@ async function requestData(type='getDF', params=null){
 }
 
 async function requestJSON(type='getInstanceData', params=null){
-  let url = `/api/three/${type}?`;
+  let url = `/api/${type}?`;
   if(params!=null){
       url += `${params}`;
   }
@@ -56,8 +56,8 @@ class HexGrid extends React.Component{
     }
   
     if(this.myMesh.current){
-      const data = await requestData('getDFElevation', `time=${this.state.event}`);
-      const colors = await requestData('getDFColors', `time=${this.state.event}`);
+      const data = await requestData(`${this.props.apiURL}/getDFElevation`, `time=${this.state.event}`);
+      const colors = await requestData(`${this.props.apiURL}/getDFColors`, `time=${this.state.event}`);
       this.setState({
         position: data.batches[0].data.children[0].values,
         colors: colors.batches[0].data.children[0].values,
@@ -134,7 +134,7 @@ export default class Box extends React.Component{
         {camera}
           <ambientLight color={0x002288}/>
           <directionalLight position={[200,200,-1]} color={0xffffff}/>
-          <HexGrid rows={this.props.rows} cols={this.props.cols} waitTime={this.props.waitTime} hexRadius={20} />
+          <HexGrid rows={this.props.rows} apiURL={this.props.apiURL} cols={this.props.cols} waitTime={this.props.waitTime} hexRadius={20} />
         </Canvas>
       </div>
     );
