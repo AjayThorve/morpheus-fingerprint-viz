@@ -134,7 +134,7 @@ export default class Box extends React.Component{
         {camera}
           <ambientLight color={0x002288}/>
           <directionalLight position={[200,200,-1]} color={0xffffff}/>
-          <HexGrid rows={20} cols={13} waitTime={this.props.waitTime} hexRadius={20} />
+          <HexGrid rows={this.props.rows} cols={this.props.cols} waitTime={this.props.waitTime} hexRadius={20} />
         </Canvas>
       </div>
     );

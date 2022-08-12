@@ -4,7 +4,7 @@ import * as Plot from "@observablehq/plot";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Stack from 'react-bootstrap/Stack';
 import ListGroup from 'react-bootstrap/ListGroup';
-import Box from './index';
+import Box from './Box-3d';
 
 async function requestJSON(type='getDF', params=null){
     let url = `/api/three/${type}?`;
@@ -231,7 +231,7 @@ export default class CustomD3 extends React.Component{
                 <div id="area" ref={this.areaRef}></div>
                 <hr className="partition"></hr>
                 <Stack direction="horizontal" gap={1}>
-                    <Box waitTime={this.waitTime} />                
+                    <Box rows={20} cols={13} waitTime={this.waitTime} />                
                     <div id="sidePanel">
                             <svg id="legend" ref={this.legendRef}></svg>
                         {selectedEvent}
