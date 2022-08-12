@@ -7,7 +7,7 @@ import ListGroup from 'react-bootstrap/ListGroup';
 import Box from './Box-3d';
 
 async function requestJSON(type='getDF', params=null){
-    let url = `/api/three/${type}?`;
+    let url = `/api/three-60k/${type}?`;
     if(params!=null){
         url += `${params}`;
     }
