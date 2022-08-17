@@ -5,7 +5,7 @@ import * as Plot from "@observablehq/plot";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Stack from 'react-bootstrap/Stack';
 import ListGroup from 'react-bootstrap/ListGroup';
-// import Box from './index';
+import CloseButton from 'react-bootstrap/CloseButton';
 
 async function requestJSON(type='getDF', params=null){
     let url = `/api/${type}?`;
@@ -48,7 +48,7 @@ function drawArea(areaRef, data, maxTime){
         style: {
             "background-color": "black",
             "color": "white",
-            "font-size": "14px",
+            "font-size": "16px",
             "margin-left": "80px",
             "padding-top": 0,
         },
@@ -74,7 +74,7 @@ function drawArea(areaRef, data, maxTime){
             reverse: true
         },
         color: {
-            range: ["#440154", "#1f1d1d"],
+            range: ["#b95422", "#1f1d1d"],
             legend: true, 
             legendAnchor: "center",
             style: {
@@ -117,6 +117,17 @@ async function drawAxis(svgRef, maxY, hexRadius, offsetY){
         .attr("y", 44)
         .text("USER NAME")
 
+        svg
+        .append("text")
+        .attr("transform", `translate(${190 - hexRadius},20)`)
+        .style('font-size', 16)
+        .style('font-weight', "bold")
+        .style('fill', "white")
+        .style('font-style', 'italic')
+        .attr("text-anchor", "end")
+        .attr("y", 44)
+        .text("sorted by priority")
+
        svg
         .append("text")
         .attr("transform", `translate(${265 - hexRadius},0)`)
@@ -145,7 +156,7 @@ function drawLegend(svgRef){
         width: 280,
         height: 30,
         marginLeft: 25,
-        marginBottom: 0,
+        marginBottom: 5,
         paddingBottom: 0,
         swatchSize: 11,
         style: {
@@ -153,7 +164,8 @@ function drawLegend(svgRef){
             fontSize: "14px",
         }
     });
-    svgRef.current.append(legend);
+    svgRef.current
+    .append(legend);
 }
 
 function timeout(delay) {
@@ -164,6 +176,7 @@ export default class CustomD3 extends React.Component{
     constructor(props){
         super(props);
         this.drawChart = this.drawChart.bind(this);
+        this.resetSelected = this.resetSelected.bind(this);
         this.svg = React.createRef();
         this.areaRef = React.createRef();
         this.tooltipRef = React.createRef();
@@ -175,18 +188,19 @@ export default class CustomD3 extends React.Component{
                 type: 'totalEvents'},];
         this.offsetX = 200;
         this.offsetY = 100;
-        this.hexRadius = 20;
-        this.hexgridWidth = 1600;
+        this.hexRadius = 25;
+        this.hexgridWidth = 2000;
         this.hexgridHeight = this.hexRadius * 50;
         this.state = {
-            selectedEvent: {}
+            selectedEvent: {},
         }
+        this.color = null;
     }
     async componentDidMount(){
         const totalTime = parseInt(await requestJSON("getTotalTime"));
         drawLegend(this.legendRef);
         let axisAdded = false;
-        await timeout(1000); //for 5 sec delay
+        await timeout(3000); //for 5 sec delay
         for(let i=1; i<=totalTime; i++){
             const data = await requestJSON("getDF", `offsetX=${this.offsetX}&offsetY=${this.offsetY}&time=${i}&hexRadius=${this.hexRadius}`);
             this.points.push({
@@ -205,7 +219,7 @@ export default class CustomD3 extends React.Component{
                 drawAxis(this.svg, data.maxY, this.hexRadius, this.offsetY);
                 axisAdded = true;
             }
-            await timeout(1000); //for 5 sec delay
+            // await timeout(5000); //for 5 sec delay
         }
     }
 
@@ -265,7 +279,7 @@ export default class CustomD3 extends React.Component{
         .radius(hexRadius-4);
     
     
-        const color = d3.scaleSequential()
+        this.color = d3.scaleSequential()
             .interpolator(d3.interpolateViridis)
             .domain([0,1])
     
@@ -287,11 +301,21 @@ export default class CustomD3 extends React.Component{
         .attr("transform", function(d) { 
           return "translate(" + d.x + "," + d.y + ")"; 
         })  
-        .style("fill", (d) => d.anomalyScore === null ? '#1f1d1d' : color(d.anomalyScore))
+        .style("fill", (d) => d.anomalyScore === null ? '#1f1d1d' : this.color(d.anomalyScore))
         .on("mouseover", mouseover)
         .on("click", mouseclick)
         .on("mousemove", mousemove)
         .on("mouseleave", mouseleave)    
+    }
+
+    resetSelected(){
+        if(this.state.selectedEvent !== {}){
+            this.setState(
+                {
+                    selectedEvent: {}
+                }
+            )
+        }    
     }
 
     render() {
@@ -306,24 +330,26 @@ export default class CustomD3 extends React.Component{
                     events.push(key);
                 });
                 maliciousHeader =  (
-                <span><span className="customHeader">Malicious Attributes</span>
-                </span>
+                <div className="customHeader">Malicious Attributes</div>
                 )
                 anomalyScore = (
                     <ListGroup.Item className="listOfAttributes" variant="dark" key={'anomalyScore'}><span className="selectedEventTitle">
-                    anomalyScore: <span className="selectedEvent">{Math.round(this.state.selectedEvent['anomalyScore']*100)/100}</span></span></ListGroup.Item>
+                    anomalyScore: <span className="selectedEvent" style={{"font-size": "18px", color: this.color(this.state.selectedEvent['anomalyScore'])}}>{Math.round(this.state.selectedEvent['anomalyScore']*100)/100}</span></span></ListGroup.Item>
                 )
-                maliciousFooter = <hr className="partition"></hr>
             }
+            const conditionalBreakLine = this.state.selectedEvent.anomalousAttributes ? <hr className="partition"></hr>: "";
             selectedEvent = (
-                <div>
-                    <hr className="partition"></hr>
+                <div id="sidePanel" className="detailsPanel">
                     <ListGroup>
-                        {['userID', 'time'].map(
-                            key => <ListGroup.Item className="listOfAttributes" variant="dark" key={key}><span className="selectedEventTitle">
-                                    {key}:     <span className="selectedEvent">{this.state.selectedEvent[key]}</span></span></ListGroup.Item>)
-                        }
-                        <hr className="partition"></hr>
+                        <CloseButton variant="white" 
+                            onClick={this.resetSelected}
+                        />
+                        <div className="customHeader">Event Information</div>
+                        <ListGroup.Item className="listOfAttributes" variant="dark" key={'userID'}><span className="selectedEventTitle">
+                            userID:     <span className="selectedEvent">{IPAddressLookup[this.state.selectedEvent['userID']]}</span></span></ListGroup.Item>
+                        <ListGroup.Item className="listOfAttributes" variant="dark" key={'time'}><span className="selectedEventTitle">
+                                    Time:     <span className="selectedEvent">{this.state.selectedEvent['time']}</span></span></ListGroup.Item>
+                        {conditionalBreakLine}
                         {maliciousHeader}
                         {anomalyScore}
                         {events.map(
@@ -344,17 +370,14 @@ export default class CustomD3 extends React.Component{
                 </div>
                 <div id="area" ref={this.areaRef}></div>
                 <hr className="partition"></hr>
-                <Stack direction="horizontal" gap={1}>
-                    <div id="hexgrid">
-                        <svg ref={this.svg}></svg>
-                        <div id="tooltip" ref={this.tooltipRef}></div>
-                    </div>
-                
-                    <div id="sidePanel">
-                            <svg id="legend" ref={this.legendRef}></svg>
-                        {selectedEvent}
-                    </div>
-                </Stack>
+                <div id="hexgrid">
+                    <svg ref={this.svg}></svg>
+                    <div id="tooltip" ref={this.tooltipRef}></div>
+                    <svg id="legend" ref={this.legendRef} transform="translate(1620,-1260)"></svg>
+                </div>
+                <div>
+                    {selectedEvent}
+                </div>
             </div>
         )
     }

@@ -111,10 +111,9 @@ function offsetBasedGridData(df, hexRadius){
         "color_b": Series.sequence({step:0, init: 1, type: new Float32, size: size*max}),
         "anomalyScoreMax": Series.sequence({step:0, init: 0, type: new Float32, size: size*max}),
     });
-    return coords;
-    // .assign({
-    //     "row": Series.new({type: new Utf8String, data: points.row}),
-    // });
+    return coords.assign({
+        "row": userID,
+    });
 }
 
 const namesPosition = ["offset_0", "offset_1","offset_2","offset_3","offset_4","elevation","offset_6","offset_7","offset_8","offset_9",
@@ -159,9 +158,9 @@ function generateElevation(df){
         const gridIndex = tempData.filter(tempData.get('time').eq(t)).head(elevation.length).get('index');
         tempData = tempData.assign({elevation: tempData.get('elevation').scatter(elevation.mul(50),gridIndex)});
     });
-    // if(tempData.get('anomalyScoreMax').max() > 0){
-    //     tempData = tempData.sortValues({anomalyScoreMax: {ascending: false}}).sortValues({userID: {ascending: false}});
-    // }
+    if(tempData.get('anomalyScoreMax').max() > 0){
+        tempData = tempData.sortValues({userID: {ascending: true}, anomalyScoreMax: {ascending: false}});
+    }
     return new DataFrame({
         position: tempData.select(namesPosition).interleaveColumns()
     });
@@ -170,12 +169,17 @@ function generateElevation(df){
 function generateColors(df){
     let tempData = dataGrid;
     let CurrentSortOrder = df.select(['userID', 'anomalyScore', 'time']).groupBy({by: 'userID'}).sum().sortValues({anomalyScore: {ascending: false}}).get('userID');
+
+    const testDf = new DataFrame({"userID": CurrentSortOrder}).castAll(new Uint8);
+
     // print(CurrentSortOrder);
+    // console.log('indices');
     [...df.get('time').unique()].forEach((t) => {
         const grp_temp = data.filter(data.get('time').eq(t)).select(['userID', 'anomalyScore', 'time']).groupBy({by: 'userID'});
         const sortedResults = grp_temp.max();
 
         const gridIndex = tempData.filter(tempData.get('time').eq(t)).head(sortedResults.get('anomalyScore').length).get('index');
+        // print(gridIndex);
 
         // console.log(t);
         // print(sortedResults.get('anomalyScore'))
@@ -187,16 +191,15 @@ function generateColors(df){
         );
         tempData = tempData.assign({
             'anomalyScoreMax': tempData.get('anomalyScoreMax').scatter(sortedResults.get('anomalyScore'),gridIndex),
-            // 'userID': tempData.get('userID').scatter(sortedResults.get('userID'),gridIndex),
+            // 'userID': tempData.get('userID').scatter(Series.sequence({init: 0, step: 1, size: CurrentSortOrder.length, type: new Uint32}), CurrentSortOrder.mul(t).cast(new Uint32)),
             'color_r': tempData.get('color_r').scatter(colors.color_r, gridIndex),
             'color_g': tempData.get('color_g').scatter(colors.color_g, gridIndex),
             'color_b': tempData.get('color_b').scatter(colors.color_b, gridIndex)
         });
     });
     // if(tempData.get('anomalyScoreMax').max() > 0){
-    //     tempData = tempData.sortValues({anomalyScoreMax: {ascending: false}}).sortValues({userID: {ascending: false}});
+    //     tempData = tempData.sortValues({userID: {ascending: true}, time: {ascending: true}});
     // }
-
     return new DataFrame({
         colors: tempData.select(namesColor).interleaveColumns()
     });

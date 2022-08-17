@@ -18,35 +18,61 @@ const data = symmetricDataGrid(
         sourceType: 'files',
         sources: ['./public/data/dfp_20_users.parquet']
     })
-)
+);
 
 function symmetricDataGrid(df){
-    let d = {userID:[], time:[]};
-
+    let d = {userID:[], time:[], row: []};
+    let randomAnomalyValues = [];
+    let paddingTime = [-10,-9,-8,-7,-6,-5,-4,-3,-2,-1];
     [...df.get('userID').unique()].forEach((v) => {
         [...df.get('time').unique()].forEach((i) => {
             const maxEventCountIP = df.filter(df.get('time').eq(i)).groupBy({by: 'userID'}).count().get('time').max();
             const EventCount = df.filter(df.get('time').eq(i).logicalAnd(df.get('userID').eq(v))).numRows;
-            let nrows = maxEventCountIP - EventCount;
+            const nrows = maxEventCountIP - EventCount;
             if(nrows > 0){
                 d.userID.push(...Array(nrows).fill(v));
+                d.row.push(...Array(nrows).fill(v));
                 d.time.push(...Array(nrows).fill(i));
+                randomAnomalyValues.push(...Array(nrows).fill(null));
             }
         });
     });
+
+    const anomalyValues = [null, 0, null, null, null];
+    [...df.get('userID').unique()].forEach((v) => {
+        paddingTime.forEach((i) => {
+            const nrows = 4;
+            d.userID.push(...Array(nrows).fill(v));
+            d.row.push(...Array(nrows).fill(v));
+            d.time.push(...Array(nrows).fill(i));
+            randomAnomalyValues.push(...Array(nrows).fill(
+                anomalyValues[Math.floor(Math.random() * 5)]
+                ));
+        });
+    });
+
     if(d.userID.length > 0){
-        df = df.concat(new DataFrame(d));
+        df = df.concat(new DataFrame({
+            ...d,
+            anomalyScore: randomAnomalyValues
+        }));
     }
    
     return df;
 }
-
+function print(df){
+    console.log(df.toArrow().toArray());
+}
 
 function createGridCoords(df, hexRadius=30){
     const rows = data.get('userID').nunique();
-    let max = df.groupBy({by: 'userID'}).count().get('time').max();
-
-    df = df.sortValues({userID: {ascending: true, null_order: 'after'}});
+    let max = 
+        df.groupBy({by: 'userID'}).count().get('time').max();
+    const CurrentSortOrder = df.select(['userID', 'anomalyScore', 'time']).groupBy({by: 'userID'}).sum().sortValues({anomalyScore: {ascending: false}}).get('userID');
+    
+    
+    df = df.sortValues({userID: {ascending: true}});
+    
     var points = {
         x: [],
         y: []
@@ -63,9 +89,10 @@ function createGridCoords(df, hexRadius=30){
             points.y.push(y);
         }//for j
     }
-    return df.assign(points);
+    const tempData = df.assign(points);
+    //filter columns on the right for consistency
+    return tempData.filter(tempData.get('x').le(hexRadius * 39 * Math.sqrt(3)));
 }
-
 
 
 export default async function handler(req, res) {
@@ -78,7 +105,7 @@ export default async function handler(req, res) {
         const time = req.query.time ? parseInt(req.query.time) : null;
         const hexRadius = req.query.hexRadius ? parseInt(req.query.hexRadius) : 30;
         let finalData = null;
-        for(let i = time; i>=Math.max(time-8, 1); i--){
+        for(let i = time; i>=Math.max(time-10, -10); i--){
             let tempDataMask = data.get('time').eq(i);
             let tempData = data.filter(tempDataMask);
 
@@ -106,6 +133,6 @@ export default async function handler(req, res) {
             }
         )
     }else if(fn == "getTotalTime"){
-        res.send(data.get('time').unique().length);
+        res.send(data.get('time').max());
     }
 }

@@ -56,7 +56,13 @@ body {
   overflow-y: auto;
   width: 350px;
   height: 720px;
-  border-left: 3px double #333;
+  padding-top: 0px;
+  background-color: black !important;
+  border-style: double;
+  border-color: #333 !important;
+  opacity: 0.9;
+  float: right;
+  margin-top: -640px;
 }
 
 .partition {
@@ -68,10 +74,14 @@ body {
   height: 5px;
 }
 
+.hide {
+  visibility: hidden;
+}
+
 .topnav {
-  background-color: #333;
+  background-color: black;
   overflow: hidden;
-  border-bottom-color: black;
+  border-bottom-color: #76B900;
   border-bottom-style: double;
 }
 
@@ -93,7 +103,7 @@ body {
 }
 
 .selectedEvent {
-  color: red;
+  color: #b95422;
 
 }
 

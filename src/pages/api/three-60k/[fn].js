@@ -157,7 +157,7 @@ function generateElevation(df){
         
         const elevation = sortedResults.get('time').div(t);
         const gridIndex = tempData.filter(tempData.get('time').eq(t)).head(elevation.length).get('index');
-        tempData = tempData.assign({elevation: tempData.get('elevation').scatter(elevation.mul(50),gridIndex)});
+        tempData = tempData.assign({elevation: tempData.get('elevation').scatter(elevation.mul(50),gridIndex)}).castAll(new Uint16);
     });
     // if(tempData.get('anomalyScoreMax').max() > 0){
     //     tempData = tempData.sortValues({anomalyScoreMax: {ascending: false}}).sortValues({userID: {ascending: false}});
