@@ -201,7 +201,7 @@ export default class CustomD3 extends React.Component{
         drawLegend(this.legendRef);
         let axisAdded = false;
         // await timeout(3000); //for 5 sec delay
-        for(let i=1; i<=totalTime; i++){
+        for(let i=4; i<=totalTime; i++){
             const data = await requestJSON("getDF", `offsetX=${this.offsetX}&offsetY=${this.offsetY}&time=${i}&hexRadius=${this.hexRadius}`);
             this.points.push({
                 time: i,
