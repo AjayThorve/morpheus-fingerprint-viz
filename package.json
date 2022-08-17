@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "CUDA_VISIBLE_DEVICES=0 next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "CUDA_VISIBLE_DEVICES=0 next start",
     "lint": "next lint",
     "postinstall": "./install-node-rapids.sh"
   },
