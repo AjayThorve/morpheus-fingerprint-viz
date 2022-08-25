@@ -1,4 +1,4 @@
-const { RecordBatchStreamWriter } = require('@rapidsai/apache-arrow');
+const { RecordBatchStreamWriter } = require('apache-arrow');
 const pipeline = require('util').promisify(require('stream').pipeline);
 const d3 = require('d3-hexbin');
 const {DataFrame, Uint64,Int32,Uint8, Uint32, Uint16, Series, Float32, Utf8String} = require('@rapidsai/cudf');

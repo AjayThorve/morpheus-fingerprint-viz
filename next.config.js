@@ -18,7 +18,7 @@ const nextConfig = {
         '@rapidsai/deck.gl': '@rapidsai/deck.gl',
         '@rapidsai/rmm': '@rapidsai/rmm',
         '@rapidsai/cudf': '@rapidsai/cudf',
-        '@rapidsai/apache-arrow': '@rapidsai/apache-arrow'
+        'apache-arrow': 'apache-arrow'
       });
     }
     // console.log(require('util').inspect({ isServer, config }, false, Infinity, true));

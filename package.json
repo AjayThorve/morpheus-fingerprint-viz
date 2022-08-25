@@ -6,10 +6,10 @@
     "dev": "CUDA_VISIBLE_DEVICES=0 next dev",
     "build": "next build",
     "start": "CUDA_VISIBLE_DEVICES=0 next start",
-    "lint": "next lint",
-    "postinstall": "./install-node-rapids.sh"
+    "lint": "next lint"
   },
   "dependencies": {
+    "@rapidsai/cudf": "22.6.2",
     "@deck.gl/aggregation-layers": "8.7.12",
     "@deck.gl/carto": "8.7.12",
     "@deck.gl/core": "8.7.12",
