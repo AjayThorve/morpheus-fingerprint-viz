@@ -12,11 +12,16 @@ async function sendDF(df, res){
     );
 }
 
-const data = DataFrame.readParquet({
+let data = DataFrame.readParquet({
     sourceType: 'files',
     sources: ['./public/data/dfp_60k_users.parquet']
 });
 
+data = data.assign({'elevation': data.get('time')})
+
+const paddingDF = new DataFrame({
+    userID: data.get('userID').unique()
+})
 const dataGrid = offsetBasedGridData(data, 20);
 
 function offsetBasedGridData(df, hexRadius){
@@ -111,10 +116,9 @@ function offsetBasedGridData(df, hexRadius){
         "color_b": Series.sequence({step:0, init: 1, type: new Float32, size: size*max}),
         "anomalyScoreMax": Series.sequence({step:0, init: 0, type: new Float32, size: size*max}),
     });
-    return coords;
-    // .assign({
-    //     "row": Series.new({type: new Utf8String, data: points.row}),
-    // });
+    return coords.assign({
+        "row": userID,
+    });
 }
 
 const namesPosition = ["offset_0", "offset_1","offset_2","offset_3","offset_4","elevation","offset_6","offset_7","offset_8","offset_9",
@@ -151,52 +155,61 @@ function getData(instanceID, df){
 function generateElevation(df){
     let tempData = dataGrid;
 
+    let finData = df.select(['userID', 'time', 'anomalyScore', 'elevation']).groupBy({by: ['userID', 'time']}).sum();
+    finData = finData.assign({
+        userID: finData.get('userID_time').getChild('userID'),
+        time: finData.get('userID_time').getChild('time')
+        }).drop(['userID_time']).sortValues({'userID': {ascending: true}, 'time': {ascending: true}}).sortValues({'anomalyScore': {ascending: false}});
+    let order = df.select(['userID', 'anomalyScore']).groupBy({by: 'userID'}).sum().sortValues({anomalyScore: {ascending: false}}).get('userID');
+
     [...df.get('time').unique()].forEach((t) => {
-        const grp_temp = data.filter(data.get('time').eq(t)).select(['userID', 'anomalyScore', 'time']).groupBy({by: 'userID'});
-        const sortedResults = grp_temp.sum();
-        
-        const elevation = sortedResults.get('time').div(t);
-        const gridIndex = tempData.filter(tempData.get('time').eq(t)).head(elevation.length).get('index');
-        tempData = tempData.assign({elevation: tempData.get('elevation').scatter(elevation.mul(50),gridIndex)}).castAll(new Uint16);
+        let sortedResults = finData.filter(finData.get('time').eq(t));
+        sortedResults = sortedResults.join({other: paddingDF, on:['userID'], how:'outer', rsuffix:'_r'}).drop(['userID_r']).sortValues({userID: {ascending: true}});
+        sortedResults = sortedResults.gather(order);
+        console.log("time------", t);
+        print(sortedResults);
+    
+        const elevation = sortedResults.get('elevation').replaceNulls(0).div(t);
+        const gridIndex = tempData.filter(tempData.get('time').eq(t)).get('index').head(sortedResults.numRows);
+        tempData = tempData.assign({elevation: tempData.get('elevation').scatter(elevation.mul(50),gridIndex)});
     });
-    // if(tempData.get('anomalyScoreMax').max() > 0){
-    //     tempData = tempData.sortValues({anomalyScoreMax: {ascending: false}}).sortValues({userID: {ascending: false}});
-    // }
     return new DataFrame({
         position: tempData.select(namesPosition).interleaveColumns()
     });
 }
 
 function generateColors(df){
+
     let tempData = dataGrid;
-    let CurrentSortOrder = df.select(['userID', 'anomalyScore', 'time']).groupBy({by: 'userID'}).sum().sortValues({anomalyScore: {ascending: false}}).get('userID');
-    // print(CurrentSortOrder);
+
+    let finData = df.select(['userID', 'time', 'anomalyScore', 'elevation']).groupBy({by: ['userID', 'time']}).sum();
+    finData = finData.assign({
+        userID: finData.get('userID_time').getChild('userID'),
+        time: finData.get('userID_time').getChild('time')
+        }).drop(['userID_time']).sortValues({'userID': {ascending: true}, 'time': {ascending: true}});
+
+    let order = df.select(['userID', 'anomalyScore']).groupBy({by: 'userID'}).sum().sortValues({anomalyScore: {ascending: false}}).get('userID');
+
     [...df.get('time').unique()].forEach((t) => {
-        const grp_temp = data.filter(data.get('time').eq(t)).select(['userID', 'anomalyScore', 'time']).groupBy({by: 'userID'});
-        const sortedResults = grp_temp.max();
+        let sortedResults = finData.filter(finData.get('time').eq(t));
+        sortedResults = sortedResults.join({other: paddingDF, on:['userID'], how:'outer', rsuffix:'_r'}).drop(['userID_r']).sortValues({userID: {ascending: true}});
+        sortedResults = sortedResults.gather(order);
+        console.log("time------", t);
+        print(sortedResults);
+        const gridIndex = tempData.filter(tempData.get('time').eq(t)).get('index').head(sortedResults.numRows);
 
-        const gridIndex = tempData.filter(tempData.get('time').eq(t)).head(sortedResults.get('anomalyScore').length).get('index');
-
-        // console.log(t);
-        // print(sortedResults.get('anomalyScore'))
-        // print(gridIndex)
         const colors = mapValuesToColorSeries(
             sortedResults.get('anomalyScore'),
             [0, 0.2, 0.4, 0.6, 0.8, 1],
             ["#440154","#414487","#2a788e","#22a884","#7ad151","#fde725"]
         );
         tempData = tempData.assign({
-            'anomalyScoreMax': tempData.get('anomalyScoreMax').scatter(sortedResults.get('anomalyScore'),gridIndex),
-            // 'userID': tempData.get('userID').scatter(sortedResults.get('userID'),gridIndex),
+            'anomalyScoreMax': tempData.get('anomalyScoreMax').scatter(sortedResults.get('anomalyScore'), gridIndex),
             'color_r': tempData.get('color_r').scatter(colors.color_r, gridIndex),
             'color_g': tempData.get('color_g').scatter(colors.color_g, gridIndex),
             'color_b': tempData.get('color_b').scatter(colors.color_b, gridIndex)
         });
     });
-    // if(tempData.get('anomalyScoreMax').max() > 0){
-    //     tempData = tempData.sortValues({anomalyScoreMax: {ascending: false}}).sortValues({userID: {ascending: false}});
-    // }
-
     return new DataFrame({
         colors: tempData.select(namesColor).interleaveColumns()
     });

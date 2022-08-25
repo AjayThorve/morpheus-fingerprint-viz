@@ -26,7 +26,7 @@ async function requestJSON(type='getInstanceData', params=null){
 }
 
 
-class HexGrid extends React.Component{ 
+class HexGrid extends React.Component{
   constructor(props){
     super(props);
     this.myMesh = React.createRef();

@@ -14,7 +14,7 @@ export function mapValuesToColorSeries(
     values,
     domain,
     colors,
-    nullColor = {r:255, g:255, b:12}){
+    nullColor = {r:255, g:192, b:203}){
     // validate colors and domain lengths
     if (colors.length < 1 || domain.length < 1) {
       throw new Error('colors and domain must be arrays of length 1 or greater');
