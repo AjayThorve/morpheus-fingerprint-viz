@@ -1,19 +1,33 @@
+
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 import React from "react";
 import * as d3 from "d3";
 import * as Plot from "@observablehq/plot";
-import 'bootstrap/dist/css/bootstrap.min.css';
-import Stack from 'react-bootstrap/Stack';
+import CloseButton from 'react-bootstrap/CloseButton';
 import ListGroup from 'react-bootstrap/ListGroup';
+import {tableFromIPC} from 'apache-arrow';
 import Box from './Box-3d';
 
-async function requestJSON(type='getDF', params=null){
+async function requestJSON(type='getEventStats', params=null){
     let url = `/api/three/${type}?`;
     if(params!=null){
         url += `${params}`;
     }
-    return await fetch(url, {method: 'GET', 'headers': {'Access-Control-Allow-Origin': "*"}}).then(res => res.json());
+    return await fetch(url, {method: 'GET', 'headers': {'Access-Control-Allow-Origin': "*"}}).then(res => res.json()).catch(e => console.log(e));
 }
 
+async function requestData(type='getDF', params=null){
+    let url = `/api/three/${type}?`;
+    if(params!=null){
+      url += `${params}`;
+    }
+    const result = await fetch(url, {method: 'GET', 'headers': {'Access-Control-Allow-Origin': "*"}});
+    const table = tableFromIPC(result);
+    return table;
+  }
+
+  
 function drawArea(areaRef, data, maxTime){
     const chart = Plot.plot({
         marks: [
@@ -44,7 +58,7 @@ function drawArea(areaRef, data, maxTime){
             reverse: true
         },
         color: {
-            range: ["#440154", "#1f1d1d"],
+            range: ["#f73d0a", "#1f1d1d"],
             legend: true, 
             legendAnchor: "center",
             style: {
@@ -60,51 +74,51 @@ function drawArea(areaRef, data, maxTime){
       }
  }
 
-async function drawAxis(svgRef, maxY, hexRadius, offsetY){
-    const svg = d3.select(svgRef.current);
-    const IPs = (await requestJSON('getUniqueIDs'))['userID'];
-    const yScale = d3.scaleBand()
-        .range([offsetY - hexRadius, maxY + hexRadius])
-        .domain(IPs)
-        .padding(0.05)
+// async function drawAxis(svgRef, maxY, hexRadius, offsetY){
+//     const svg = d3.select(svgRef.current);
+//     const IPs = (await requestJSON('getUniqueIDs'))['userID'];
+//     const yScale = d3.scaleBand()
+//         .range([offsetY - hexRadius, maxY + hexRadius])
+//         .domain(IPs)
+//         .padding(0.05)
 
-        svg
-        .append("g")
-        .attr("transform", `translate(${190 - hexRadius},0)`)
-        .style('font-size', hexRadius-4)
-        .style('color', "white")
-        .call(d3.axisLeft(yScale).tickSize(0))
-        .select(".domain").remove()
+//         svg
+//         .append("g")
+//         .attr("transform", `translate(${190 - hexRadius},0)`)
+//         .style('font-size', hexRadius-4)
+//         .style('color', "white")
+//         .call(d3.axisLeft(yScale).tickSize(0))
+//         .select(".domain").remove()
 
-        svg
-        .append("text")
-        .attr("transform", `translate(${190 - hexRadius},0)`)
-        .style('font-size', 16)
-        .style('font-weight', "bold")
-        .style('fill', "white")
-        .attr("text-anchor", "end")
-        .attr("y", 44)
-        .text("USER EVENTS")
+//         svg
+//         .append("text")
+//         .attr("transform", `translate(${190 - hexRadius},0)`)
+//         .style('font-size', 16)
+//         .style('font-weight', "bold")
+//         .style('fill', "white")
+//         .attr("text-anchor", "end")
+//         .attr("y", 44)
+//         .text("USER EVENTS")
         
-        svg
-        .append("text")
-        .attr("transform", `translate(${190 - hexRadius},0)`)
-        .attr("class", "wordWrap")
-        .style('font-size', 16)
-        .style('font-weight', "bold")
-        .style('fill', "white")
-        .attr("text-anchor", "end")
-        .attr("y", 66)
-        .text("BY TIME")
+//         svg
+//         .append("text")
+//         .attr("transform", `translate(${190 - hexRadius},0)`)
+//         .attr("class", "wordWrap")
+//         .style('font-size', 16)
+//         .style('font-weight', "bold")
+//         .style('fill', "white")
+//         .attr("text-anchor", "end")
+//         .attr("y", 66)
+//         .text("BY TIME")
 
-}
+// }
 
 function drawLegend(svgRef){
     let legend = Plot.legend({
         color: {
             type: 'sequential',
             domain: [0,1],
-            scheme: 'viridis',
+            range: ["#343f42","#f7d0a1","#f78400","#f15a22","#f73d0a"],
             tickRotate: 90,
             tickFormat: d => {
                 if(d == 0.6){return "Anomaly (>0.6)";}
@@ -150,6 +164,10 @@ export default class CustomD3 extends React.Component{
         this.hexgridHeight = this.hexRadius * 50;
         this.state = {
             selectedEvent: {},
+            currentTime: 0,
+            position: [],
+            colors:[],
+            userIDs:[]
         }
         this.waitTime = 3000;
     }
@@ -157,9 +175,19 @@ export default class CustomD3 extends React.Component{
         const totalTime = parseInt(await requestJSON("getTotalTime"));
         drawLegend(this.legendRef);
         let axisAdded = false;
-        await timeout(this.waitTime); //for 5 sec delay
+        await timeout(5000); //for 5 sec delay
         for(let i=1; i<=totalTime; i++){
-            const data = await requestJSON("getDF", `offsetX=${this.offsetX}&offsetY=${this.offsetY}&time=${i}&hexRadius=${this.hexRadius}`);
+            const data = await requestJSON("getEventStats", `time=${i}`);
+            const elevation = await requestData("getDFElevation", `time=${i}`);
+            const colors = await requestData("getDFColors", `time=${i}`);
+            const userIDs = await requestData("getUniqueIDs", `time=${i}`);
+            
+            this.setState({
+                currentTime: i,
+                position: elevation.batches[0].data.children[0].values,
+                colors: colors.batches[0].data.children[0].values,
+                userIDs: new TextDecoder().decode(userIDs.batches[0].data.children[0].values),        
+            });
             this.points.push({
                 time: i,
                 events: data.totalAnomalousEvents,
@@ -171,10 +199,10 @@ export default class CustomD3 extends React.Component{
                 type: 'totalEvents'
             });
             drawArea(this.areaRef, this.points, i);
-            if(!axisAdded){
-                drawAxis(this.svg, data.maxY, this.hexRadius, this.offsetY);
-                axisAdded = true;
-            }
+            // if(!axisAdded){
+            //     drawAxis(this.svg, data.maxY, this.hexRadius, this.offsetY);
+            //     axisAdded = true;
+            // }
             await timeout(this.waitTime); //for 5 sec delay
         }
     }
@@ -191,24 +219,26 @@ export default class CustomD3 extends React.Component{
                     events.push(key);
                 });
                 maliciousHeader =  (
-                <span><span className="customHeader">Malicious Attributes</span>
-                </span>
+                <div className="customHeader">Malicious Attributes</div>
                 )
                 anomalyScore = (
                     <ListGroup.Item className="listOfAttributes" variant="dark" key={'anomalyScore'}><span className="selectedEventTitle">
-                    anomalyScore: <span className="selectedEvent">{Math.round(this.state.selectedEvent['anomalyScore']*100)/100}</span></span></ListGroup.Item>
+                    anomalyScore: <span className="selectedEvent" style={{"font-size": "18px", color: this.color(this.state.selectedEvent['anomalyScore'])}}>{Math.round(this.state.selectedEvent['anomalyScore']*100)/100}</span></span></ListGroup.Item>
                 )
-                maliciousFooter = <hr className="partition"></hr>
             }
+            const conditionalBreakLine = this.state.selectedEvent.anomalousAttributes ? <hr className="partition"></hr>: "";
             selectedEvent = (
-                <div>
-                    <hr className="partition"></hr>
+                <div id="sidePanel" className="detailsPanel">
                     <ListGroup>
-                        {['userID', 'time'].map(
-                            key => <ListGroup.Item className="listOfAttributes" variant="dark" key={key}><span className="selectedEventTitle">
-                                    {key}:     <span className="selectedEvent">{this.state.selectedEvent[key]}</span></span></ListGroup.Item>)
-                        }
-                        <hr className="partition"></hr>
+                        <CloseButton variant="white" 
+                            onClick={this.resetSelected}
+                        />
+                        <div className="customHeader">Event Information</div>
+                        <ListGroup.Item className="listOfAttributes" variant="dark" key={'userID'}><span className="selectedEventTitle">
+                            userID:     <span className="selectedEvent">{IPAddressLookup[this.state.selectedEvent['userID']]}</span></span></ListGroup.Item>
+                        <ListGroup.Item className="listOfAttributes" variant="dark" key={'time'}><span className="selectedEventTitle">
+                                    Time:     <span className="selectedEvent">{this.state.selectedEvent['time']}</span></span></ListGroup.Item>
+                        {conditionalBreakLine}
                         {maliciousHeader}
                         {anomalyScore}
                         {events.map(
@@ -221,7 +251,6 @@ export default class CustomD3 extends React.Component{
             )
             anomalyScore = <span className="selectedEvent" id="anomalyNumber">{parseFloat(this.state.selectedEvent.anomalyScore).toFixed(2)} </span>
         }
-        console.log(this.stats);
         return (
             <div id="chart">
                 <div className="topnav">
@@ -230,13 +259,21 @@ export default class CustomD3 extends React.Component{
                 </div>
                 <div id="area" ref={this.areaRef}></div>
                 <hr className="partition"></hr>
-                <Stack direction="horizontal" gap={1}>
-                    <Box rows={20} cols={13} apiURL={"three"} waitTime={this.waitTime} />                
-                    <div id="sidePanel">
-                            <svg id="legend" ref={this.legendRef}></svg>
+                <Box
+                    rows={20} cols={48}
+                    apiURL={"three"}
+                    waitTime={this.waitTime}
+                    currentTime={this.state.currentTime}
+                    position={this.state.position}
+                    colors={this.state.colors}
+                    userIDs={this.state.userIDs}
+                    />
+                <div id="hexgrid">
+                    <svg id="legend" ref={this.legendRef} transform="translate(1620,-990)"></svg>               
+                    {/* <div id="sidePanel">
                         {selectedEvent}
-                    </div>
-                </Stack>
+                    </div> */}
+                </div>
             </div>
         )
     }

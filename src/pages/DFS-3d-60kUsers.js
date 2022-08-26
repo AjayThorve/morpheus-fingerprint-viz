@@ -6,12 +6,12 @@ import Stack from 'react-bootstrap/Stack';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Box from './Box-3d';
 
-async function requestJSON(type='getDF', params=null){
+async function requestJSON(type='getEventStats', params=null){
     let url = `/api/three-60k/${type}?`;
     if(params!=null){
         url += `${params}`;
     }
-    return await fetch(url, {method: 'GET', 'headers': {'Access-Control-Allow-Origin': "*"}}).then(res => res.json());
+    return await fetch(url, {method: 'GET', 'headers': {'Access-Control-Allow-Origin': "*"}}).then(res => res.json()).catch(e => console.log(e));
 }
 
 function drawArea(areaRef, data, maxTime){
@@ -44,7 +44,7 @@ function drawArea(areaRef, data, maxTime){
             reverse: true
         },
         color: {
-            range: ["#440154", "#1f1d1d"],
+            range: ["#f73d0a", "#1f1d1d"],
             legend: true, 
             legendAnchor: "center",
             style: {
@@ -60,51 +60,51 @@ function drawArea(areaRef, data, maxTime){
       }
  }
 
-async function drawAxis(svgRef, maxY, hexRadius, offsetY){
-    const svg = d3.select(svgRef.current);
-    const IPs = (await requestJSON('getUniqueIDs'))['userID'];
-    const yScale = d3.scaleBand()
-        .range([offsetY - hexRadius, maxY + hexRadius])
-        .domain(IPs)
-        .padding(0.05)
+// async function drawAxis(svgRef, maxY, hexRadius, offsetY){
+//     const svg = d3.select(svgRef.current);
+//     const IPs = (await requestJSON('getUniqueIDs'))['userID'];
+//     const yScale = d3.scaleBand()
+//         .range([offsetY - hexRadius, maxY + hexRadius])
+//         .domain(IPs)
+//         .padding(0.05)
 
-        svg
-        .append("g")
-        .attr("transform", `translate(${190 - hexRadius},0)`)
-        .style('font-size', hexRadius-4)
-        .style('color', "white")
-        .call(d3.axisLeft(yScale).tickSize(0))
-        .select(".domain").remove()
+//         svg
+//         .append("g")
+//         .attr("transform", `translate(${190 - hexRadius},0)`)
+//         .style('font-size', hexRadius-4)
+//         .style('color', "white")
+//         .call(d3.axisLeft(yScale).tickSize(0))
+//         .select(".domain").remove()
 
-        svg
-        .append("text")
-        .attr("transform", `translate(${190 - hexRadius},0)`)
-        .style('font-size', 16)
-        .style('font-weight', "bold")
-        .style('fill', "white")
-        .attr("text-anchor", "end")
-        .attr("y", 44)
-        .text("USER EVENTS")
+//         svg
+//         .append("text")
+//         .attr("transform", `translate(${190 - hexRadius},0)`)
+//         .style('font-size', 16)
+//         .style('font-weight', "bold")
+//         .style('fill', "white")
+//         .attr("text-anchor", "end")
+//         .attr("y", 44)
+//         .text("USER EVENTS")
         
-        svg
-        .append("text")
-        .attr("transform", `translate(${190 - hexRadius},0)`)
-        .attr("class", "wordWrap")
-        .style('font-size', 16)
-        .style('font-weight', "bold")
-        .style('fill', "white")
-        .attr("text-anchor", "end")
-        .attr("y", 66)
-        .text("BY TIME")
+//         svg
+//         .append("text")
+//         .attr("transform", `translate(${190 - hexRadius},0)`)
+//         .attr("class", "wordWrap")
+//         .style('font-size', 16)
+//         .style('font-weight', "bold")
+//         .style('fill', "white")
+//         .attr("text-anchor", "end")
+//         .attr("y", 66)
+//         .text("BY TIME")
 
-}
+// }
 
 function drawLegend(svgRef){
     let legend = Plot.legend({
         color: {
             type: 'sequential',
             domain: [0,1],
-            scheme: 'viridis',
+            range: ["#343f42","#f7d0a1","#f78400","#f15a22","#f73d0a"],
             tickRotate: 90,
             tickFormat: d => {
                 if(d == 0.6){return "Anomaly (>0.6)";}
@@ -150,6 +150,7 @@ export default class CustomD3 extends React.Component{
         this.hexgridHeight = this.hexRadius * 50;
         this.state = {
             selectedEvent: {},
+            currentTime: 0
         }
         this.waitTime = 3000;
     }
@@ -157,9 +158,12 @@ export default class CustomD3 extends React.Component{
         const totalTime = parseInt(await requestJSON("getTotalTime"));
         drawLegend(this.legendRef);
         let axisAdded = false;
-        await timeout(this.waitTime); //for 5 sec delay
+        await timeout(5000); //for 5 sec delay
         for(let i=1; i<=totalTime; i++){
-            const data = await requestJSON("getDF", `offsetX=${this.offsetX}&offsetY=${this.offsetY}&time=${i}&hexRadius=${this.hexRadius}`);
+            this.setState({
+                currentTime: i
+            });
+            const data = await requestJSON("getEventStats", `time=${i}`);
             this.points.push({
                 time: i,
                 events: data.totalAnomalousEvents,
@@ -170,11 +174,12 @@ export default class CustomD3 extends React.Component{
                 events: data.totalEvents,
                 type: 'totalEvents'
             });
+            await timeout(2000); // wait for hex chart to be rendered, sync ticks
             drawArea(this.areaRef, this.points, i);
-            if(!axisAdded){
-                drawAxis(this.svg, data.maxY, this.hexRadius, this.offsetY);
-                axisAdded = true;
-            }
+            // if(!axisAdded){
+            //     drawAxis(this.svg, data.maxY, this.hexRadius, this.offsetY);
+            //     axisAdded = true;
+            // }
             await timeout(this.waitTime); //for 5 sec delay
         }
     }
@@ -221,7 +226,6 @@ export default class CustomD3 extends React.Component{
             )
             anomalyScore = <span className="selectedEvent" id="anomalyNumber">{parseFloat(this.state.selectedEvent.anomalyScore).toFixed(2)} </span>
         }
-        console.log(this.stats);
         return (
             <div id="chart">
                 <div className="topnav">
@@ -231,8 +235,7 @@ export default class CustomD3 extends React.Component{
                 <div id="area" ref={this.areaRef}></div>
                 <hr className="partition"></hr>
                 <Stack direction="horizontal" gap={1}>
-                    {/** Renders only 20k, but all 60k are processed and sorted on backend */}
-                    <Box rows={20000} cols={13} apiURL={"three-60k"} waitTime={this.waitTime} />                
+                    <Box rows={2000} cols={40} apiURL={"three-60k"} waitTime={this.waitTime} currentTime={this.state.currentTime}/>                
                     <div id="sidePanel">
                             <svg id="legend" ref={this.legendRef}></svg>
                         {selectedEvent}

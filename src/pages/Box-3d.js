@@ -3,20 +3,10 @@ import { Canvas, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { OrthographicCamera, MapControls, OrbitControls } from '@react-three/drei'
 import { acceleratedRaycast } from 'three-mesh-bvh';
-import {tableFromIPC} from 'apache-arrow';
 import { Stats, Text } from "@react-three/drei";
 
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
-async function requestData(type='getDF', params=null){
-  let url = `/api/${type}?`;
-  if(params!=null){
-    url += `${params}`;
-  }
-  const result = await fetch(url, {method: 'GET', 'headers': {'Access-Control-Allow-Origin': "*"}});
-  const table = tableFromIPC(result);
-  return table;
-}
 
 async function requestJSON(type='getInstanceData', params=null){
   let url = `/api/${type}?`;
@@ -31,15 +21,15 @@ class HexGrid extends React.Component{
   constructor(props){
     super(props);
     this.myMesh = React.createRef();
+    this.globalMesh = React.createRef();
     this.colorRef = React.createRef();
     this.state = {
-      rows: props.rows,
-      cols: props.cols,
-      hexRadius: props.hexRadius,
+      rows: props.rows || 20,
+      cols: props.cols || 13,
+      hexRadius: props.hexRadius || 20,
       position: new Float32Array([]),
       colors: new Float32Array([]),
       selectedInstance: null,
-      event: 1,
       repeatfn: null
     }
     this.set = function(e){
@@ -51,77 +41,68 @@ class HexGrid extends React.Component{
     this.highlightColor = new THREE.Color('#ff0000')
   }
 
-  async resetData(){  
-    if(this.state.repeatfn && this.state.event > 13){
-      clearInterval(this.state.repeatfn);
-    }
-  
-    if(this.myMesh.current){
-      const data = await requestData(`${this.props.apiURL}/getDFElevation`, `time=${this.state.event}`);
-      const colors = await requestData(`${this.props.apiURL}/getDFColors`, `time=${this.state.event}`);
-      const userIDs = await requestData(`${this.props.apiURL}/getUniqueIDs`, `time=${this.state.event}`);
-
-      this.setState({
-        position: data.batches[0].data.children[0].values,
-        colors: colors.batches[0].data.children[0].values,
-        userIDs: new TextDecoder().decode(userIDs.batches[0].data.children[0].values),
-        event: this.state.event + 1
-      });
-
-      // this.myMesh.current.instanceMatrix = new THREE.InstancedBufferAttribute(this.state.position, 16);
+  async componentDidUpdate(prevProps, prevState){
+    if(prevProps.currentTime !== this.props.currentTime){
+      if(this.myMesh.current){
+        this.setState({
+          position: this.props.position,
+          colors: this.props.colors,
+          userIDs: this.props.userIDs
+        });
+        this.myMesh.current.instanceMatrix = new THREE.InstancedBufferAttribute(this.state.position, 16);
+      }
     }
   }
 
   async componentDidMount(){
-    this.state.repeatfn = setInterval(() => this.resetData(), this.props.waitTime);
-
     if(this.myMesh.current){
-      this.myMesh.current.geometry.translate(200 - window.innerWidth/2,0.5,200 - window.innerHeight/2);
+      this.myMesh.current.geometry.translate(0, 0.5, 0);
     }
   }
 
   render(){
     const arr = this.state.colors;
     return (
-      <mesh>
-          <Text
-              scale={[1, 1, 1]}
-              color="white" // default
+      <mesh ref={this.globalMesh} position={[200-window.innerWidth/2,0,80-window.innerHeight/2]}>
+          <instancedMesh
+            ref={this.myMesh}
+            args={[null, null, this.state.rows * this.state.cols]}
+            onClick={async(e) => {
+              e.stopPropagation();
+              const id = e.instanceId;
+              const result = await requestJSON('getInstanceData', `time=${this.state.event}&id=${id}`);
+              console.log(result);
+            }}
           >
-              {this.state.userIDs}
-          </Text>
-
-      {/* <instancedMesh
-        ref={this.myMesh}
-        args={[null, null, this.state.rows * this.state.cols]}
-        onClick={async(e) => {
-          e.stopPropagation();
-          const id = e.instanceId;
-          const result = await requestJSON('getInstanceData', `time=${this.state.event}&id=${id}`);
-          console.log(result);
-        }}
-      >
         <cylinderGeometry  attach="geometry"
           args={[this.state.hexRadius - 4, this.state.hexRadius - 4, 1, 6, 1]}>
               <instancedBufferAttribute attach="attributes-color" args={[this.state.colors, 3]} />
             </cylinderGeometry>
         <meshPhongMaterial vertexColors/>
           <MapControls 
-            screenSpacePanning={true}
-            minDistance={0}
-            maxDistance={5000}
-            maxPolarAngle={Math.PI/2}
-          />
-        </instancedMesh> */}
+                  screenSpacePanning={true}
+                  minDistance={0}
+                  maxDistance={5000}
+                  maxPolarAngle={Math.PI/2}
+                />
+        </instancedMesh>
+        <Text
+            scale={[1, 1, 1]}
+            rotation={[-1.57,0,0]}
+            color="white" // default
+            fontSize={20}
+            maxWidth={100}
+            anchorY={"right"}
+            position-x={-100}
+            position-z={-14}
+            lineHeight={1.5}
+        >
+            {this.state.userIDs}
+        </Text>
         </mesh>
     );
   }
 }
-
-function timeout(delay) {
-  return new Promise( res => setTimeout(res, delay) );
-}
-
 
 export default class Box extends React.Component{ 
   constructor(props){
@@ -129,28 +110,35 @@ export default class Box extends React.Component{
     this.state = {
       args:[0,0,0,0,0,0]
     };
+    this.hexRef = React.createRef(null);
   }
   async componentDidMount(){
     this.setState({
       args: [window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, -5000, 5000]
-    })
-    await timeout(this.props.waitTime); //for 5 sec delay
+    });
   }
   render(){
     const camera = <OrthographicCamera makeDefault zoom={1}
-    position={[0,200,200]}
+    position={[0,1,0]}
     args={this.state.args}
   />
     return (
       <div className="App">
-        <Canvas id="xyz">
+        <Canvas id="xyz" linear={true}>
         {camera}
           <ambientLight color={0x002288}/>
           <directionalLight position={[200,200,-1]} color={0xffffff}/>
-          <HexGrid rows={this.props.rows} apiURL={this.props.apiURL} cols={this.props.cols} waitTime={this.props.waitTime} hexRadius={20} />
+          <HexGrid
+            currentTime={this.props.currentTime} rows={this.props.rows}
+            apiURL={this.props.apiURL} cols={this.props.cols}
+            waitTime={this.props.waitTime} hexRadius={20}
+            position={this.props.position}
+            colors={this.props.colors}
+            userIDs={this.props.userIDs}
+            />
+            {/* <Stats/> */}
         </Canvas>
       </div>
     );
-  
   }
 }

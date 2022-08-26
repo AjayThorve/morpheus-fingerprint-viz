@@ -3,7 +3,6 @@ import * as d3 from "d3";
 const d3hex = require("d3-hexbin");
 import * as Plot from "@observablehq/plot";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import Stack from 'react-bootstrap/Stack';
 import ListGroup from 'react-bootstrap/ListGroup';
 import CloseButton from 'react-bootstrap/CloseButton';
 
