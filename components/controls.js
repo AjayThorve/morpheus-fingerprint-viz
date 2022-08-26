@@ -1,16 +1,16 @@
-import React, { useRef } from 'react';
-import { extend, useFrame, useThree } from '@react-three/fiber';
+import React, { useRef } from "react";
+import { extend, useFrame, useThree } from "@react-three/fiber";
 
-import { MapControls } from 'three/examples/jsm/controls/OrbitControls';
+import { MapControls } from "three/examples/jsm/controls/OrbitControls";
 
-extend({ MapControls })
+extend({ MapControls });
 
 function Controls(props) {
-  const controls = useRef()
-  const { camera, gl } = useThree()
+  const controls = useRef();
+  const { camera, gl } = useThree();
   useFrame(() => {
-    controls.current.update()
-  })
+    controls.current.update();
+  });
   return (
     <mapControls
       ref={controls}
@@ -22,7 +22,7 @@ function Controls(props) {
       maxPolarAngle={Math.PI / 2}
       {...props}
     />
-  )
+  );
 }
 
 export default Controls;
