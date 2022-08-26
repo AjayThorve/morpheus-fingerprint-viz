@@ -17,6 +17,28 @@ let data = DataFrame.readParquet({
     sources: ['./public/data/dfp_20_users.parquet']
 });
 
+const names = Series.new(['sgonzalez\n',
+'ccameron\n',
+'tanderson\n',
+'jessicabrewer\n',
+'abigailstanley\n',
+'patricia32\n',
+'stewartlucas\n',
+'sandra54\n',
+'cmorris\n',
+'gonzalezjulia\n',
+'fhenderson\n',
+'robinsonricky\n',
+'michaelpatton\n',
+'veronicalopez\n',
+'ann22\n',
+'swilliams\n',
+'julie57\n',
+'aberg\n',
+'richard26\n',
+'robertsondonna\n']
+);
+
 data = data.assign({'elevation': data.get('time')})
 
 const paddingDF = new DataFrame({
@@ -166,8 +188,8 @@ function generateElevation(df){
         let sortedResults = finData.filter(finData.get('time').eq(t));
         sortedResults = sortedResults.join({other: paddingDF, on:['userID'], how:'outer', rsuffix:'_r'}).drop(['userID_r']).sortValues({userID: {ascending: true}});
         sortedResults = sortedResults.gather(order);
-        console.log("time------", t);
-        print(sortedResults);
+        // console.log("time------", t);
+        // print(sortedResults);
     
         const elevation = sortedResults.get('elevation').replaceNulls(0).div(t);
         const gridIndex = tempData.filter(tempData.get('time').eq(t)).get('index').head(sortedResults.numRows);
@@ -175,6 +197,13 @@ function generateElevation(df){
     });
     return new DataFrame({
         position: tempData.select(namesPosition).interleaveColumns()
+    });
+}
+
+function getSortOrder(df){
+    let order = df.select(['userID', 'anomalyScore']).groupBy({by: 'userID'}).sum().sortValues({anomalyScore: {ascending: false}}).get('userID');
+    return new DataFrame({
+        names: names.gather(order)
     });
 }
 
@@ -194,8 +223,8 @@ function generateColors(df){
         let sortedResults = finData.filter(finData.get('time').eq(t));
         sortedResults = sortedResults.join({other: paddingDF, on:['userID'], how:'outer', rsuffix:'_r'}).drop(['userID_r']).sortValues({userID: {ascending: true}});
         sortedResults = sortedResults.gather(order);
-        console.log("time------", t);
-        print(sortedResults);
+        // console.log("time------", t);
+        // print(sortedResults);
         const gridIndex = tempData.filter(tempData.get('time').eq(t)).get('index').head(sortedResults.numRows);
 
         const colors = mapValuesToColorSeries(
@@ -220,7 +249,9 @@ function generateColors(df){
 export default async function handler(req, res) {
     const fn = req.query.fn;
     if(fn == "getUniqueIDs") {
-        res.send({'userID': [...data.get('userID').unique().sortValues(true)]});
+        const time = req.query.time ? parseInt(req.query.time) : null;
+        const tempData = data.filter(data.get('time').le(time));
+        sendDF(getSortOrder(tempData), res);
     }else if(fn == "getDFElevation"){
         const time = req.query.time ? parseInt(req.query.time) : null;
         const tempData = data.filter(data.get('time').le(time));

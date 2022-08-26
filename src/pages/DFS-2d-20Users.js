@@ -34,7 +34,7 @@ const IPAddressLookup = ['sgonzalez',
 'julie57',
 'aberg',
 'richard26',
-'robertsondonna']
+'robertsondonna'];
 
 function drawArea(areaRef, data, maxTime){
     const chart = Plot.plot({

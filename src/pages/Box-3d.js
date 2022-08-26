@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { OrthographicCamera, MapControls, OrbitControls } from '@react-three/drei'
 import { acceleratedRaycast } from 'three-mesh-bvh';
 import {tableFromIPC} from 'apache-arrow';
+import { Stats, Text } from "@react-three/drei";
 
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
@@ -58,13 +59,16 @@ class HexGrid extends React.Component{
     if(this.myMesh.current){
       const data = await requestData(`${this.props.apiURL}/getDFElevation`, `time=${this.state.event}`);
       const colors = await requestData(`${this.props.apiURL}/getDFColors`, `time=${this.state.event}`);
+      const userIDs = await requestData(`${this.props.apiURL}/getUniqueIDs`, `time=${this.state.event}`);
+
       this.setState({
         position: data.batches[0].data.children[0].values,
         colors: colors.batches[0].data.children[0].values,
+        userIDs: new TextDecoder().decode(userIDs.batches[0].data.children[0].values),
         event: this.state.event + 1
       });
-      this.myMesh.current.instanceMatrix = new THREE.InstancedBufferAttribute(this.state.position, 16);
 
+      // this.myMesh.current.instanceMatrix = new THREE.InstancedBufferAttribute(this.state.position, 16);
     }
   }
 
@@ -79,7 +83,15 @@ class HexGrid extends React.Component{
   render(){
     const arr = this.state.colors;
     return (
-      <instancedMesh
+      <mesh>
+          <Text
+              scale={[1, 1, 1]}
+              color="white" // default
+          >
+              {this.state.userIDs}
+          </Text>
+
+      {/* <instancedMesh
         ref={this.myMesh}
         args={[null, null, this.state.rows * this.state.cols]}
         onClick={async(e) => {
@@ -100,7 +112,8 @@ class HexGrid extends React.Component{
             maxDistance={5000}
             maxPolarAngle={Math.PI/2}
           />
-        </instancedMesh>
+        </instancedMesh> */}
+        </mesh>
     );
   }
 }
