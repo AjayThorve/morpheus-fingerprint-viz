@@ -12,7 +12,7 @@ import { Stats, Text } from "@react-three/drei";
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 async function requestJSON(type = "getInstanceData", params = null) {
-  let url = `/api/${type}?`;
+  let url = `/api/three/${type}?`;
   if (params != null) {
     url += `${params}`;
   }
@@ -37,12 +37,6 @@ class HexGrid extends React.Component {
       selectedInstance: null,
       repeatfn: null,
     };
-    this.set = function (e) {
-      console.log("clicked", e);
-      this.setState({
-        selectedInstance: e,
-      });
-    };
     this.highlightColor = new THREE.Color("#ff0000");
   }
 
@@ -65,6 +59,17 @@ class HexGrid extends React.Component {
   async componentDidMount() {
     if (this.myMesh.current) {
       this.myMesh.current.geometry.translate(0, 0.5, 0);
+      if (this.props.position.length > 0) {
+        this.setState({
+          position: this.props.position,
+          colors: this.props.colors,
+          userIDs: this.props.userIDs,
+        });
+        this.myMesh.current.instanceMatrix = new THREE.InstancedBufferAttribute(
+          this.props.position,
+          16
+        );
+      }
     }
   }
 
@@ -73,42 +78,69 @@ class HexGrid extends React.Component {
     return (
       <mesh
         ref={this.globalMesh}
-        onClick={(e) => {
-          e.stopPropagation();
-          const id = e.instanceId;
-          // const result = await requestJSON('getInstanceData', `time=${this.state.event}&id=${id}`);
-          // console.log(result);
-        }}
         position={[200 - window.innerWidth / 2, 0, 80 - window.innerHeight / 2]}
       >
         <instancedMesh
           ref={this.myMesh}
           args={[null, null, this.state.rows * this.state.cols]}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = "pointer";
+            const id = e.instanceId;
+            const colorsTemp = this.state.colors;
+            colorsTemp[id * 3] *= 1.5;
+            colorsTemp[id * 3 + 1] *= 1.5;
+            colorsTemp[id * 3 + 2] *= 1.5;
+            this.setState({
+              colors: new Float32Array(colorsTemp),
+            });
+
+            const positionsTemp = this.state.position;
+            positionsTemp[id * 16 + 5] *= 1.1;
+            positionsTemp[id * 16 + 4] += 2;
+            this.myMesh.current.instanceMatrix =
+              new THREE.InstancedBufferAttribute(positionsTemp, 16);
+          }}
+          onClick={async (e) => {
+            e.stopPropagation();
+            const id = e.instanceId;
+            const result = await requestJSON(
+              "getInstanceData",
+              `time=${this.props.currentTime}&id=${id}`
+            );
+            console.log(result);
+          }}
+          onPointerLeave={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = "default";
+            this.setState({
+              colors: new Float32Array(this.props.colors),
+            });
+            const positionsTemp = this.state.position;
+            positionsTemp[e.instanceId * 16 + 5] /= 1.1;
+            positionsTemp[e.instanceId * 16 + 4] -= 2;
+            this.myMesh.current.instanceMatrix =
+              new THREE.InstancedBufferAttribute(positionsTemp, 16);
+          }}
         >
           <cylinderGeometry
             attach="geometry"
             args={[this.state.hexRadius - 4, this.state.hexRadius - 4, 1, 6, 1]}
           >
             <instancedBufferAttribute
+              ref={this.colorRef}
               attach="attributes-color"
               args={[this.state.colors, 3]}
             />
           </cylinderGeometry>
           <meshPhongMaterial vertexColors />
         </instancedMesh>
-        <MapControls
-          screenSpacePanning={true}
-          minDistance={0}
-          maxDistance={5000}
-          maxPolarAngle={Math.PI / 2}
-        />
-
         <Text
           scale={[1, 1, 1]}
           rotation={[-1.57, 0, 0]}
           color="white" // default
           fontSize={20}
-          maxWidth={100}
+          maxWidth={140}
           anchorY={"right"}
           position-x={-100}
           position-z={-14}
@@ -142,20 +174,14 @@ export default class Box extends React.Component {
     });
   }
   render() {
-    const camera = (
-      <OrthographicCamera
-        makeDefault
-        zoom={1}
-        position={[0, 1, 0]}
-        args={this.state.args}
-      />
-    );
     return (
       <div className="App">
         <Canvas id="xyz" linear={true}>
-          {camera}
-          <ambientLight color={0x002288} />
-          <directionalLight position={[200, 200, -1]} color={0xffffff} />
+          <ambientLight color={0xffffff} />
+          <directionalLight position={[300, 200, 1]} color={0xffffff} />
+          <directionalLight position={[300, 1, 1]} color={0xffffff} />
+          <directionalLight position={[1, 200, 1]} color={0xffffff} />
+
           <HexGrid
             currentTime={this.props.currentTime}
             rows={this.props.rows}
@@ -166,6 +192,19 @@ export default class Box extends React.Component {
             position={this.props.position}
             colors={this.props.colors}
             userIDs={this.props.userIDs}
+          />
+          <MapControls
+            makeDefault
+            screenSpacePanning={true}
+            minDistance={0}
+            maxDistance={5000}
+            maxPolarAngle={Math.PI / 2}
+          />
+          <OrthographicCamera
+            makeDefault
+            zoom={1}
+            position={[0, 1800, 4]}
+            args={this.state.args}
           />
           {/* <Stats/> */}
         </Canvas>

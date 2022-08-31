@@ -1,42 +1,12 @@
 const { RecordBatchStreamWriter } = require("apache-arrow");
 const pipeline = require("util").promisify(require("stream").pipeline);
 const d3 = require("d3-hexbin");
-const {
-  DataFrame,
-  Uint64,
-  Int32,
-  Uint8,
-  Uint32,
-  Uint16,
-  Series,
-  Float32,
-  Utf8String,
-} = require("@rapidsai/cudf");
-const { mapValuesToColorSeries } = require("../../../../components/utils");
+const { DataFrame, Int32, Series, Float32 } = require("@rapidsai/cudf");
+const { mapValuesToColorSeries } = require("../../../components/utils");
+const { fire } = require("../../../components/colors");
 
+const { colors } = require("../../../components/colors");
 const maxCols = 48;
-const names = Series.new([
-  "sgonzalez\n",
-  "ccameron\n",
-  "tanderson\n",
-  "jessicabrewer\n",
-  "abigailstanley\n",
-  "patricia32\n",
-  "stewartlucas\n",
-  "sandra54\n",
-  "cmorris\n",
-  "gonzalezjulia\n",
-  "fhenderson\n",
-  "robinsonricky\n",
-  "michaelpatton\n",
-  "veronicalopez\n",
-  "ann22\n",
-  "swilliams\n",
-  "julie57\n",
-  "aberg\n",
-  "richard26\n",
-  "robertsondonna\n",
-]);
 
 async function sendDF(df, res) {
   await pipeline(
@@ -47,15 +17,31 @@ async function sendDF(df, res) {
 
 let data = DataFrame.readParquet({
   sourceType: "files",
-  sources: ["./public/data/dfp_20_users.parquet"],
+  sources: ["./public/data/interesting-users-34.parquet"],
+}).rename({ anomaly_score: "anomalyScore" });
+
+data = data.assign({
+  userID: data.get("userPrincipalName").encodeLabels(),
+  elevation: data.get("time"),
+  userPrincipalName: data
+    .get("userPrincipalName")
+    .pad(12, "right", " ")
+    .pad(13, "right", "\n"),
 });
 
-data = data.assign({ elevation: data.get("time") });
+const names = data
+  .sortValues({ userID: { ascending: true } })
+  .get("userPrincipalName")
+  .unique();
 
 const paddingDF = new DataFrame({
-  userID: data.get("userID").unique(),
+  userID: data
+    .sortValues({ userID: { ascending: true } })
+    .get("userID")
+    .unique(),
   names: names,
 });
+
 const dataGrid = offsetBasedGridData(data, 20);
 
 function offsetBasedGridData(df, hexRadius) {
@@ -290,43 +276,35 @@ function print(df) {
   console.log(df.toArrow().toArray());
 }
 
-function getData(instanceID, df) {
-  let tempData = dataGrid;
+function getData(instanceID, df, sort = false) {
+  let order = sort
+    ? df
+        .select(["userID", "anomalyScore"])
+        .groupBy({ by: "userID" })
+        .sum()
+        .sortValues({ anomalyScore: { ascending: false } })
+        .get("userID")
+    : df.get("userID").unique();
 
-  [...df.get("time").unique()].forEach((t) => {
-    const grp_temp = data
-      .filter(data.get("time").eq(t))
-      .select(["userID", "anomalyScore", "time"])
-      .groupBy({ by: "userID" });
-    const sortedResults = grp_temp.sum();
+  const time = parseInt(df.get("time").max() - (instanceID % maxCols));
+  const userID = order.getValue(parseInt(instanceID / maxCols));
 
-    const elevation = sortedResults.get("time").div(t);
-    const gridIndex = tempData
-      .filter(tempData.get("time").eq(t))
-      .head(elevation.length)
-      .get("index");
-    tempData = tempData.assign({
-      elevation: tempData
-        .get("elevation")
-        .scatter(elevation.mul(50), gridIndex),
-      // userID: tempData.get('userID').scatter(sortedResults.get('userID'),gridIndex),
-    });
-  });
-  let userDetails = tempData.filter(tempData.get("index").eq(instanceID));
   const resultMask = data
     .get("userID")
-    .eq(userDetails.get("userID").max())
-    .logicalAnd(data.get("time").eq(userDetails.get("time").max()));
+    .eq(userID)
+    .logicalAnd(data.get("time").eq(time));
   return data.filter(resultMask);
 }
 
-function generateData(df, type = "elevation") {
-  let order = df
-    .select(["userID", "anomalyScore"])
-    .groupBy({ by: "userID" })
-    .sum()
-    .sortValues({ anomalyScore: { ascending: false } })
-    .get("userID");
+function generateData(df, type = "elevation", sort = false) {
+  let order = sort
+    ? df
+        .select(["userID", "anomalyScore"])
+        .groupBy({ by: "userID" })
+        .sum()
+        .sortValues({ anomalyScore: { ascending: false } })
+        .get("userID")
+    : df.get("userID").unique();
 
   if (type == "userIDs") {
     return new DataFrame({
@@ -353,6 +331,7 @@ function generateData(df, type = "elevation") {
     .sortValues({ userID: { ascending: true }, time: { ascending: true } })
     .sortValues({ anomalyScore: { ascending: false } });
 
+  console.time(`compute${type}`);
   [...df.get("time").unique().sortValues({ ascending: false })].forEach((t) => {
     let sortedResults = finData.filter(finData.get("time").eq(t));
     sortedResults = sortedResults
@@ -360,7 +339,7 @@ function generateData(df, type = "elevation") {
       .drop(["userID_r"])
       .sortValues({ userID: { ascending: true } });
     sortedResults = sortedResults.gather(order);
-    const gridTime = df.get("time").max() - (t % maxCols);
+    const gridTime = (df.get("time").max() - t) % maxCols;
     const gridIndex = tempData
       .filter(tempData.get("time").eq(gridTime))
       .get("index")
@@ -369,30 +348,31 @@ function generateData(df, type = "elevation") {
     if (type == "elevation") {
       const elevation = sortedResults.get("elevation").replaceNulls(0).div(t);
       tempData = tempData.assign({
-        elevation: tempData
-          .get("elevation")
-          .scatter(elevation.mul(50), gridIndex),
+        elevation: tempData.get("elevation").scatter(elevation, gridIndex),
       });
     } else if (type == "colors") {
-      const colors = mapValuesToColorSeries(
-        sortedResults.get("anomalyScoreMax"),
-        [0, 0.2, 0.4, 0.6, 0.8, 1],
-        ["#343f42", "#f7d0a1", "#f78400", "#f15a22", "#f73d0a"]
-      );
+      const anomalyScoreMax = sortedResults.get("anomalyScoreMax");
       tempData = tempData.assign({
-        color_r: tempData.get("color_r").scatter(colors.color_r, gridIndex),
-        color_g: tempData.get("color_g").scatter(colors.color_g, gridIndex),
-        color_b: tempData.get("color_b").scatter(colors.color_b, gridIndex),
+        anomalyScoreMax: tempData
+          .get("anomalyScoreMax")
+          .scatter(anomalyScoreMax, gridIndex),
       });
     }
   });
   if (type == "colors") {
+    const colors = mapValuesToColorSeries(
+      tempData.get("anomalyScoreMax"),
+      [0.385, 1, 0.01],
+      fire
+    );
     tempData = tempData.assign({
-      color_r: tempData.get("color_r").div(255),
-      color_g: tempData.get("color_g").div(255),
-      color_b: tempData.get("color_b").div(255),
+      color_r: colors.color_r,
+      color_g: colors.color_g,
+      color_b: colors.color_b,
     });
   }
+  console.timeEnd(`compute${type}`);
+
   return new DataFrame({
     [type]: tempData
       .select(type == "elevation" ? namesPosition : namesColor)
@@ -407,22 +387,25 @@ export default async function handler(req, res) {
     const time = req.query.time
       ? parseInt(req.query.time)
       : data.get("time").max();
+    const sort = req.query.sort ? req.query.sort === "true" : false;
     const tempData = data.filter(data.get("time").le(time));
-    sendDF(generateData(tempData, "userIDs"), res);
+    sendDF(generateData(tempData, "userIDs", sort), res);
   } else if (fn == "getDFElevation") {
     const time = req.query.time
       ? parseInt(req.query.time)
       : data.get("time").max();
+    const sort = req.query.sort ? req.query.sort === "true" : false;
     const tempData = data.filter(data.get("time").le(time));
-    sendDF(generateData(tempData, "elevation"), res);
+    sendDF(generateData(tempData, "elevation", sort), res);
   } else if (fn == "getDFColors") {
     const time = req.query.time
       ? parseInt(req.query.time)
       : data.get("time").max();
+    const sort = req.query.sort ? req.query.sort === "true" : false;
     const tempData = data.filter(data.get("time").le(time));
-    sendDF(generateData(tempData, "colors"), res);
+    sendDF(generateData(tempData, "colors", sort), res);
   } else if (fn == "getTotalTime") {
-    res.send(data.get("time").unique().length);
+    res.send(data.get("time").max() - 1);
   } else if (fn == "getEventStats") {
     const time = req.query.time
       ? parseInt(req.query.time)
@@ -430,8 +413,25 @@ export default async function handler(req, res) {
     const events = data.filter(data.get("time").eq(time));
     res.send({
       totalEvents: events.numRows - events.get("anomalyScore").nullCount,
-      totalAnomalousEvents: events.filter(events.get("anomalyScore").ge(0.6))
+      totalAnomalousEvents: events.filter(events.get("anomalyScore").ge(0.385))
         .numRows,
     });
+  } else if (fn == "getInstanceData") {
+    const time = req.query.time
+      ? parseInt(req.query.time)
+      : data.get("time").min();
+    const id = req.query.id ? parseInt(req.query.id) : null;
+    const sort = req.query.sort ? req.query.sort === "true" : false;
+    const tempData = data.filter(data.get("time").le(time));
+
+    if (id) {
+      res.send({
+        result: getData(id, tempData, sort).toArrow().toArray(),
+      });
+    } else {
+      res.send({
+        result: null,
+      });
+    }
   }
 }

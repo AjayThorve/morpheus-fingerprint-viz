@@ -6,6 +6,7 @@ import * as Plot from "@observablehq/plot";
 import CloseButton from "react-bootstrap/CloseButton";
 import ListGroup from "react-bootstrap/ListGroup";
 import { tableFromIPC } from "apache-arrow";
+import { fire } from "../components/colors";
 import Box from "./Box-3d";
 
 async function requestJSON(type = "getEventStats", params = null) {
@@ -58,7 +59,7 @@ function drawArea(areaRef, data, maxTime) {
     },
     x: {
       type: "point",
-      tickFormat: (d) => `T-${(maxTime - d) * 5}`,
+      tickFormat: (d) => `T-${maxTime - d}`,
       label: null,
       // tickRotate: -60,
       reverse: true,
@@ -124,11 +125,11 @@ function drawLegend(svgRef) {
     color: {
       type: "sequential",
       domain: [0, 1],
-      range: ["#343f42", "#f7d0a1", "#f78400", "#f15a22", "#f73d0a"],
+      range: fire,
       tickRotate: 90,
       tickFormat: (d) => {
-        if (d == 0.6) {
-          return "Anomaly (>0.6)";
+        if (d == 0.4) {
+          return "Anomaly (>0.385)";
         }
         if (d == 0 || d == 1) {
           return d;
@@ -177,19 +178,32 @@ export default class CustomD3 extends React.Component {
       position: [],
       colors: [],
       userIDs: [],
+      sort: false,
     };
-    this.waitTime = 3000;
+    this.waitTime = 500;
   }
   async componentDidMount() {
     const totalTime = parseInt(await requestJSON("getTotalTime"));
     drawLegend(this.legendRef);
     let axisAdded = false;
-    await timeout(5000); //for 5 sec delay
-    for (let i = 1; i <= totalTime; i++) {
-      const data = await requestJSON("getEventStats", `time=${i}`);
-      const elevation = await requestData("getDFElevation", `time=${i}`);
-      const colors = await requestData("getDFColors", `time=${i}`);
-      const userIDs = await requestData("getUniqueIDs", `time=${i}`);
+    // await timeout(5000); //for 5 sec delay
+    for (let i = 101; i <= totalTime; i += 1) {
+      const data = await requestJSON(
+        "getEventStats",
+        `time=${i}&sort=${this.state.sort}`
+      );
+      const elevation = await requestData(
+        "getDFElevation",
+        `time=${i}&sort=${this.state.sort}`
+      );
+      const colors = await requestData(
+        "getDFColors",
+        `time=${i}&sort=${this.state.sort}`
+      );
+      const userIDs = await requestData(
+        "getUniqueIDs",
+        `time=${i}&sort=${this.state.sort}`
+      );
 
       this.setState({
         currentTime: i,
@@ -330,7 +344,7 @@ export default class CustomD3 extends React.Component {
         <div id="area" ref={this.areaRef}></div>
         <hr className="partition"></hr>
         <Box
-          rows={20}
+          rows={34}
           cols={48}
           apiURL={"three"}
           waitTime={this.waitTime}
@@ -343,7 +357,7 @@ export default class CustomD3 extends React.Component {
           <svg
             id="legend"
             ref={this.legendRef}
-            transform="translate(1620,-990)"
+            transform="translate(1620,-1020)"
           ></svg>
           {/* <div id="sidePanel">
                         {selectedEvent}

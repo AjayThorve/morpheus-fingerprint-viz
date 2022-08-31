@@ -9,13 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@rapidsai/cudf": "22.6.2",
     "@deck.gl/aggregation-layers": "8.7.12",
-    "@deck.gl/carto": "8.7.12",
+    "@deck.gl/carto": "^8.8.9",
     "@deck.gl/core": "8.7.12",
     "@deck.gl/layers": "8.7.12",
     "@deck.gl/react": "8.7.12",
     "@observablehq/plot": "0.5.2",
+    "@rapidsai/cudf": "22.6.2",
     "@react-three/drei": "^9.19.7",
     "@react-three/fiber": "^8.3.1",
     "@react-three/postprocessing": "^2.6.1",
@@ -24,6 +24,7 @@
     "camera-controls": "1.36.1",
     "d3": "7.6.1",
     "d3-hexbin": "0.2.2",
+    "d3-node": "^2.2.3",
     "h3-js": "^4.0.0-rc1",
     "next": "12.2.2",
     "next-transpile-modules": "^9.0.0",
