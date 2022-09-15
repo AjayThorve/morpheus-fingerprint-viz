@@ -178,7 +178,7 @@ export default class CustomD3 extends React.Component {
       position: [],
       colors: [],
       userIDs: [],
-      sort: false,
+      sort: true,
     };
     this.waitTime = 500;
   }
@@ -187,7 +187,7 @@ export default class CustomD3 extends React.Component {
     drawLegend(this.legendRef);
     let axisAdded = false;
     // await timeout(5000); //for 5 sec delay
-    for (let i = 101; i <= totalTime; i += 1) {
+    for (let i = 90; i <= totalTime; i += 1) {
       const data = await requestJSON(
         "getEventStats",
         `time=${i}&sort=${this.state.sort}`
@@ -345,7 +345,7 @@ export default class CustomD3 extends React.Component {
         <hr className="partition"></hr>
         <Box
           rows={34}
-          cols={48}
+          cols={30}
           apiURL={"three"}
           waitTime={this.waitTime}
           currentTime={this.state.currentTime}

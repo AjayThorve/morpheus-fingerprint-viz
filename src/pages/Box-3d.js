@@ -104,9 +104,10 @@ class HexGrid extends React.Component {
           onClick={async (e) => {
             e.stopPropagation();
             const id = e.instanceId;
+            console.log(id);
             const result = await requestJSON(
               "getInstanceData",
-              `time=${this.props.currentTime}&id=${id}`
+              `time=${this.props.currentTime}&id=${id}&sort=true`
             );
             console.log(result);
           }}

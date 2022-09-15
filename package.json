@@ -15,7 +15,7 @@
     "@deck.gl/layers": "8.7.12",
     "@deck.gl/react": "8.7.12",
     "@observablehq/plot": "0.5.2",
-    "@rapidsai/cudf": "22.6.2",
+    "@rapidsai/cudf": "^22.8.0",
     "@react-three/drei": "^9.19.7",
     "@react-three/fiber": "^8.3.1",
     "@react-three/postprocessing": "^2.6.1",

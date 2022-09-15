@@ -514,10 +514,10 @@
   dependencies:
     "@babel/runtime" "^7.0.0"
 
-"@rapidsai/core@~22.6.2":
-  version "22.6.2"
-  resolved "https://registry.yarnpkg.com/@rapidsai/core/-/core-22.6.2.tgz#fb8bce4d1f3be162b22b66a6bd7c1f299199e463"
-  integrity sha512-ihV1pcskyVs17QZWDmHU4LsHLKermrt+wLyaYxcRBM5HgonJKP9XZjYt2f0SMTMIVVq3thOCIEVlv5OjVHq9LQ==
+"@rapidsai/core@~22.8.0":
+  version "22.8.0"
+  resolved "https://registry.yarnpkg.com/@rapidsai/core/-/core-22.8.0.tgz#776810e0f28ebd0ac64b1746f8f8241d47fa7823"
+  integrity sha512-T2pkPdKQltfNmGJrpyqCzd43Hg4AGGROzRfcDCSjCfTHUPKQT8VV9n5NNO25LpIVgrjd4xHf7XjPJ0cLhVKVtQ==
   dependencies:
     "@types/node" "^15.0.0"
     bindings "^1.5.0"
@@ -525,28 +525,28 @@
     getos "3.2.1"
     tslib "^2.3.0"
 
-"@rapidsai/cuda@~22.6.2":
-  version "22.6.2"
-  resolved "https://registry.yarnpkg.com/@rapidsai/cuda/-/cuda-22.6.2.tgz#0149d8cc3526742de941b28cc8bcf59bf0172c8a"
-  integrity sha512-szSniIedbp0e9xkalx1aDLdC31iYYJ6eZ+3FTcsnHSQ2elbCQwWTIk2q8vM4PVLw3HzNDi/g2dyQ9Dndr3SDdw==
+"@rapidsai/cuda@~22.8.0":
+  version "22.8.0"
+  resolved "https://registry.yarnpkg.com/@rapidsai/cuda/-/cuda-22.8.0.tgz#7a67206cefc1788560135a1a2f4cc97aacb4abac"
+  integrity sha512-LxbajO+ejNyf73Ufg5FtpT4rh7ypAv2ybo+XeF2TrZ70TJNP4D79rDZ0kmwE17hvYyLcsO58ke3/dxhFhcQ0sw==
   dependencies:
-    "@rapidsai/core" "~22.6.2"
+    "@rapidsai/core" "~22.8.0"
 
-"@rapidsai/cudf@22.6.2":
-  version "22.6.2"
-  resolved "https://registry.yarnpkg.com/@rapidsai/cudf/-/cudf-22.6.2.tgz#160df9f2922cb80456efef64e8fe8e746613f291"
-  integrity sha512-Mwr2mSHLNT0ZDCfkrXuYPD6BWyLuMhKSJNR3iEH+De1thV8tZnFTogGaZWpJuJ2s8t4ZyL+8vC3jC6YzMNE5RQ==
+"@rapidsai/cudf@^22.8.0":
+  version "22.8.0"
+  resolved "https://registry.yarnpkg.com/@rapidsai/cudf/-/cudf-22.8.0.tgz#293c8c573bb56da66a18405f15547e3b0515efd2"
+  integrity sha512-QofekJBLqgFUKr3H5Kl3iQgockp7THcxhJkZDR6aGWzc788RUeMZtbiSkGCLyUKIhN4dUTlbXJKuf1J+Zu4JxQ==
   dependencies:
-    "@rapidsai/cuda" "~22.6.2"
-    "@rapidsai/rmm" "~22.6.2"
+    "@rapidsai/cuda" "~22.8.0"
+    "@rapidsai/rmm" "~22.8.0"
     apache-arrow "^8.0.0"
 
-"@rapidsai/rmm@~22.6.2":
-  version "22.6.2"
-  resolved "https://registry.yarnpkg.com/@rapidsai/rmm/-/rmm-22.6.2.tgz#30d68df54232c17d06d73e155baf44bb92267079"
-  integrity sha512-J+1lrP5tv1n3P9Ih8TEtyc0ncfCHarr1+Pb4NR4d4NbSNcxWODwT8Aw8qxHz8SX2rTCPvFrWbwX6/XyngNp0IQ==
+"@rapidsai/rmm@~22.8.0":
+  version "22.8.0"
+  resolved "https://registry.yarnpkg.com/@rapidsai/rmm/-/rmm-22.8.0.tgz#4f88f1d99fae2b5ae7c8e36d12c1f66de3cc7dcb"
+  integrity sha512-vFrgsgYd44HytKj16uS9tcrsVRWUwXV6YF/Pcz0F36wgryZVxxvRUaL5OtfDFWH/sk32j4ocEnqF/1FFb+0jCw==
   dependencies:
-    "@rapidsai/cuda" "~22.6.2"
+    "@rapidsai/cuda" "~22.8.0"
 
 "@react-aria/ssr@^3.2.0":
   version "3.2.0"

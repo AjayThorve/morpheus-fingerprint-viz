@@ -6,7 +6,7 @@ const { mapValuesToColorSeries } = require("../../../components/utils");
 const { fire } = require("../../../components/colors");
 
 const { colors } = require("../../../components/colors");
-const maxCols = 48;
+const maxCols = 30;
 
 async function sendDF(df, res) {
   await pipeline(
@@ -54,6 +54,7 @@ function offsetBasedGridData(df, hexRadius) {
     row: [], //Array(max).fill([...data.get('userID').unique().sortValues(true)]).flat()
   };
   let x = Series.new([]).cast(new Float32());
+  let sortIndex = Series.new([]).cast(new Int32());
   let index = Series.new([]).cast(new Int32());
   let y = Series.new([]).cast(new Float32());
   let time = Series.new([]).cast(new Int32());
@@ -96,6 +97,24 @@ function offsetBasedGridData(df, hexRadius) {
         })
       );
 
+    sortIndex = sortIndex
+      .concat(
+        Series.sequence({
+          type: new Int32(),
+          init: t * size,
+          step: 2,
+          size: size / 2,
+        })
+      )
+      .concat(
+        Series.sequence({
+          type: new Int32(),
+          init: t * size + 1,
+          step: 2,
+          size: size / 2,
+        })
+      );
+
     y = y
       .concat(
         Series.sequence({
@@ -132,8 +151,15 @@ function offsetBasedGridData(df, hexRadius) {
       })
     );
   }
-  let coords = new DataFrame({ x, y, time, index, userID }).sortValues({
-    index: { ascending: true },
+  let coords = new DataFrame({
+    x,
+    y,
+    time,
+    index,
+    userID,
+    sortIndex,
+  }).sortValues({
+    sortIndex: { ascending: true },
   });
 
   coords = coords.assign({
@@ -285,15 +311,17 @@ function getData(instanceID, df, sort = false) {
         .sortValues({ anomalyScore: { ascending: false } })
         .get("userID")
     : df.get("userID").unique();
+  const totalUsers = data.get("userID").nunique();
+  const time = parseInt(df.get("time").max() - instanceID / totalUsers);
+  const userID = order.getValue(parseInt(instanceID % totalUsers));
 
-  const time = parseInt(df.get("time").max() - (instanceID % maxCols));
-  const userID = order.getValue(parseInt(instanceID / maxCols));
+  console.log(time, userID);
 
   const resultMask = data
     .get("userID")
     .eq(userID)
     .logicalAnd(data.get("time").eq(time));
-  return data.filter(resultMask);
+  return data.filter(resultMask).select(["userID"]);
 }
 
 function generateData(df, type = "elevation", sort = false) {
@@ -305,6 +333,8 @@ function generateData(df, type = "elevation", sort = false) {
         .sortValues({ anomalyScore: { ascending: false } })
         .get("userID")
     : df.get("userID").unique();
+
+  const maxRows = data.get("userID").nunique();
 
   if (type == "userIDs") {
     return new DataFrame({
@@ -331,7 +361,7 @@ function generateData(df, type = "elevation", sort = false) {
     .sortValues({ userID: { ascending: true }, time: { ascending: true } })
     .sortValues({ anomalyScore: { ascending: false } });
 
-  console.time(`compute${type}`);
+  console.time(`compute${type}${df.get("time").max()}`);
   [...df.get("time").unique().sortValues({ ascending: false })].forEach((t) => {
     let sortedResults = finData.filter(finData.get("time").eq(t));
     sortedResults = sortedResults
@@ -340,15 +370,15 @@ function generateData(df, type = "elevation", sort = false) {
       .sortValues({ userID: { ascending: true } });
     sortedResults = sortedResults.gather(order);
     const gridTime = (df.get("time").max() - t) % maxCols;
-    const gridIndex = tempData
-      .filter(tempData.get("time").eq(gridTime))
-      .get("index")
-      .head(sortedResults.numRows);
+    const gridIndex = order.add(maxRows * gridTime).cast(new Int32());
 
     if (type == "elevation") {
       const elevation = sortedResults.get("elevation").replaceNulls(0).div(t);
       tempData = tempData.assign({
         elevation: tempData.get("elevation").scatter(elevation, gridIndex),
+        userID: tempData
+          .get("userID")
+          .scatter(sortedResults.get("userID"), gridIndex),
       });
     } else if (type == "colors") {
       const anomalyScoreMax = sortedResults.get("anomalyScoreMax");
@@ -356,13 +386,16 @@ function generateData(df, type = "elevation", sort = false) {
         anomalyScoreMax: tempData
           .get("anomalyScoreMax")
           .scatter(anomalyScoreMax, gridIndex),
+        userID: tempData
+          .get("userID")
+          .scatter(sortedResults.get("userID"), gridIndex),
       });
     }
   });
   if (type == "colors") {
     const colors = mapValuesToColorSeries(
       tempData.get("anomalyScoreMax"),
-      [0.385, 1, 0.01],
+      [0.1, 1, 0.01],
       fire
     );
     tempData = tempData.assign({
@@ -371,7 +404,7 @@ function generateData(df, type = "elevation", sort = false) {
       color_b: colors.color_b,
     });
   }
-  console.timeEnd(`compute${type}`);
+  console.timeEnd(`compute${type}${df.get("time").max()}`);
 
   return new DataFrame({
     [type]: tempData
@@ -420,11 +453,12 @@ export default async function handler(req, res) {
     const time = req.query.time
       ? parseInt(req.query.time)
       : data.get("time").min();
-    const id = req.query.id ? parseInt(req.query.id) : null;
+    const id = req.query.id ? parseInt(req.query.id) : -1;
     const sort = req.query.sort ? req.query.sort === "true" : false;
     const tempData = data.filter(data.get("time").le(time));
 
-    if (id) {
+    console.log(id, time);
+    if (id >= 0) {
       res.send({
         result: getData(id, tempData, sort).toArrow().toArray(),
       });
