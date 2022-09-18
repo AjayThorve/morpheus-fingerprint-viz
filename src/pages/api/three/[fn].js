@@ -1,6 +1,5 @@
 const { RecordBatchStreamWriter } = require("apache-arrow");
 const pipeline = require("util").promisify(require("stream").pipeline);
-const d3 = require("d3-hexbin");
 const { DataFrame, Int32, Series, Float32 } = require("@rapidsai/cudf");
 const { mapValuesToColorSeries } = require("../../../components/utils");
 const { fire } = require("../../../components/colors");
@@ -362,15 +361,17 @@ function generateData(df, type = "elevation", sort = false) {
     .sortValues({ anomalyScore: { ascending: false } });
 
   console.time(`compute${type}${df.get("time").max()}`);
-  [...df.get("time").unique().sortValues({ ascending: false })].forEach((t) => {
+  [...df.get("time").unique().sortValues(false).head(maxCols)].forEach((t) => {
     let sortedResults = finData.filter(finData.get("time").eq(t));
     sortedResults = sortedResults
       .join({ other: paddingDF, on: ["userID"], how: "outer", rsuffix: "_r" })
       .drop(["userID_r"])
       .sortValues({ userID: { ascending: true } });
+    
+
     sortedResults = sortedResults.gather(order);
     const gridTime = (df.get("time").max() - t) % maxCols;
-    const gridIndex = order.add(maxRows * gridTime).cast(new Int32());
+    const gridIndex = df.get("userID").unique().add(maxRows * gridTime).cast(new Int32());
 
     if (type == "elevation") {
       const elevation = sortedResults.get("elevation").replaceNulls(0).div(t);

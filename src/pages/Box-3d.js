@@ -44,9 +44,11 @@ class HexGrid extends React.Component {
     if (prevProps.currentTime !== this.props.currentTime) {
       if (this.myMesh.current) {
         this.setState({
-          position: this.props.position,
-          colors: this.props.colors,
-          userIDs: this.props.userIDs,
+          position: this.props.position.batches[0].data.children[0].values,
+          colors: this.props.colors.batches[0].data.children[0].values,
+          userIDs: new TextDecoder().decode(
+            this.props.userIDs.batches[0].data.children[0].values
+          ),
         });
         this.myMesh.current.instanceMatrix = new THREE.InstancedBufferAttribute(
           this.state.position,
@@ -59,14 +61,16 @@ class HexGrid extends React.Component {
   async componentDidMount() {
     if (this.myMesh.current) {
       this.myMesh.current.geometry.translate(0, 0.5, 0);
-      if (this.props.position.length > 0) {
+      if (this.props.position) {
         this.setState({
-          position: this.props.position,
-          colors: this.props.colors,
-          userIDs: this.props.userIDs,
+          position: this.props.position.batches[0].data.children[0].values,
+          colors: this.props.colors.batches[0].data.children[0].values,
+          userIDs: new TextDecoder().decode(
+            this.props.userIDs.batches[0].data.children[0].values
+          ),
         });
         this.myMesh.current.instanceMatrix = new THREE.InstancedBufferAttribute(
-          this.props.position,
+          this.props.position.batches[0].data.children[0].values,
           16
         );
       }
@@ -74,7 +78,6 @@ class HexGrid extends React.Component {
   }
 
   render() {
-    const arr = this.state.colors;
     return (
       <mesh
         ref={this.globalMesh}
@@ -87,19 +90,19 @@ class HexGrid extends React.Component {
             e.stopPropagation();
             document.body.style.cursor = "pointer";
             const id = e.instanceId;
-            const colorsTemp = this.state.colors;
-            colorsTemp[id * 3] *= 1.5;
-            colorsTemp[id * 3 + 1] *= 1.5;
-            colorsTemp[id * 3 + 2] *= 1.5;
-            this.setState({
-              colors: new Float32Array(colorsTemp),
-            });
+            // const colorsTemp = this.state.colors;
+            // colorsTemp[id * 3] *= 1.5;
+            // colorsTemp[id * 3 + 1] *= 1.5;
+            // colorsTemp[id * 3 + 2] *= 1.5;
+            // this.setState({
+            //   colors: new Float32Array(colorsTemp),
+            // });
 
-            const positionsTemp = this.state.position;
-            positionsTemp[id * 16 + 5] *= 1.1;
-            positionsTemp[id * 16 + 4] += 2;
-            this.myMesh.current.instanceMatrix =
-              new THREE.InstancedBufferAttribute(positionsTemp, 16);
+            // const positionsTemp = this.state.position;
+            // positionsTemp[id * 16 + 5] *= 1.1;
+            // positionsTemp[id * 16 + 4] += 2;
+            // this.myMesh.current.instanceMatrix =
+            //   new THREE.InstancedBufferAttribute(positionsTemp, 16);
           }}
           onClick={async (e) => {
             e.stopPropagation();
@@ -114,14 +117,14 @@ class HexGrid extends React.Component {
           onPointerLeave={(e) => {
             e.stopPropagation();
             document.body.style.cursor = "default";
-            this.setState({
-              colors: new Float32Array(this.props.colors),
-            });
-            const positionsTemp = this.state.position;
-            positionsTemp[e.instanceId * 16 + 5] /= 1.1;
-            positionsTemp[e.instanceId * 16 + 4] -= 2;
-            this.myMesh.current.instanceMatrix =
-              new THREE.InstancedBufferAttribute(positionsTemp, 16);
+            // this.setState({
+            //   colors: new Float32Array(this.props.colors),
+            // });
+            // const positionsTemp = this.state.position;
+            // positionsTemp[e.instanceId * 16 + 5] /= 1.1;
+            // positionsTemp[e.instanceId * 16 + 4] -= 2;
+            // this.myMesh.current.instanceMatrix =
+            //   new THREE.InstancedBufferAttribute(positionsTemp, 16);
           }}
         >
           <cylinderGeometry
@@ -178,6 +181,7 @@ export default class Box extends React.Component {
     return (
       <div className="App">
         <Canvas id="xyz" linear={true}>
+          <color attach="background" args={["#000"]} />
           <ambientLight color={0xffffff} />
           <directionalLight position={[300, 200, 1]} color={0xffffff} />
           <directionalLight position={[300, 1, 1]} color={0xffffff} />

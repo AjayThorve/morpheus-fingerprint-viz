@@ -1,12 +1,12 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-
 import React from "react";
-import * as d3 from "d3";
 import * as Plot from "@observablehq/plot";
+import * as echarts from "echarts";
 import CloseButton from "react-bootstrap/CloseButton";
 import ListGroup from "react-bootstrap/ListGroup";
-import { tableFromIPC } from "apache-arrow";
+import { Data, tableFromIPC } from "apache-arrow";
 import { fire } from "../components/colors";
+import ReactCharts from "echarts-for-react";
 import Box from "./Box-3d";
 
 async function requestJSON(type = "getEventStats", params = null) {
@@ -22,6 +22,138 @@ async function requestJSON(type = "getEventStats", params = null) {
     .catch((e) => console.log(e));
 }
 
+const AreaOptions = {
+  // left: "5%",
+  tooltip: {
+    trigger: "axis",
+    position: function (pt) {
+      return [pt[0], "10%"];
+    },
+  },
+  grid: {
+    left: 100,
+    right: 50,
+  },
+  title: {
+    textAlign: "left",
+    textVerticalAlign: "auto",
+    text: "Total Network Traffic Volume",
+    textStyle: {
+      color: "#ffffff",
+      fontSize: "18px",
+    },
+    top: "5%",
+    left: "2%",
+  },
+  color: ["#f73d0a", "#ffffff"],
+  legend: {
+    data: [
+      {
+        name: "Anomalous Traffic",
+        icon: "square",
+      },
+      {
+        name: "Network Traffic",
+        icon: "square",
+      },
+    ],
+    textStyle: {
+      color: "#ffffff",
+      fontSize: "14px",
+    },
+    bottom: "5%",
+    left: "5%",
+  },
+  xAxis: {
+    type: "time",
+    name: "Time",
+    nameLocation: "end",
+    nameTextStyle: {
+      color: "#ffffff",
+      fontWeight: "bold",
+      verticalAlign: "top",
+      lineHeight: 30,
+      fontSize: 14,
+    },
+    textStyle: {
+      color: "#ffffff",
+    },
+    splitLine: { interval: 2 },
+    axisLabel: { color: "#ffffff" },
+    inverse: true,
+  },
+  yAxis: {
+    type: "value",
+    name: "Events",
+    nameLocation: "middle",
+    nameTextStyle: {
+      color: "#ffffff",
+      fontWeight: "bold",
+      fontSize: 14,
+    },
+    axisLabel: { color: "#ffffff", align: "right" },
+    splitLine: { lineStyle: { opacity: 0.2 } },
+    nameGap: 50,
+  },
+  // dataZoom: [
+  //   {
+  //     start: 100,
+  //     end: 50,
+  //   },
+  // ],
+  series: [
+    {
+      name: "Anomalous Traffic",
+      type: "line",
+      symbol: "none",
+      stack: true,
+      lineStyle: {
+        width: 0.7,
+      },
+      areaStyle: {
+        opacity: 1,
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1.5, [
+          {
+            offset: 0,
+            color: "#f73d0a",
+          },
+          {
+            offset: 1,
+            color: "#000000",
+          },
+        ]),
+      },
+      data: [],
+    },
+    {
+      name: "Network Traffic",
+      type: "line",
+      symbol: "none",
+      stack: true,
+      lineStyle: {
+        width: 0.7,
+        color: "#ffffff",
+      },
+      areaStyle: {
+        opacity: 0.7,
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1.5, [
+          {
+            offset: 0,
+            color: "#ffffff",
+          },
+          {
+            offset: 1,
+            color: "#000000",
+          },
+        ]),
+      },
+      data: [],
+    },
+  ],
+  notMerge: true,
+  backgroundColor: "#0f0f0f",
+};
+
 async function requestData(type = "getDF", params = null) {
   let url = `/api/three/${type}?`;
   if (params != null) {
@@ -34,91 +166,6 @@ async function requestData(type = "getDF", params = null) {
   const table = tableFromIPC(result);
   return table;
 }
-
-function drawArea(areaRef, data, maxTime) {
-  const chart = Plot.plot({
-    marks: [
-      Plot.areaY(data, { x: "time", y: "events", fill: "type" }),
-      Plot.areaY(data, { x: "time", y0: "events", fill: "type" }),
-    ],
-    title: "xtz",
-    width: 1790,
-    height: 140,
-    style: {
-      "background-color": "black",
-      color: "white",
-      "font-size": 13,
-      "margin-left": "80px",
-      "padding-top": 0,
-    },
-    y: {
-      axis: true,
-      label: "NETWORK TRAFFIC",
-      labelAnchor: "center",
-      line: true,
-    },
-    x: {
-      type: "point",
-      tickFormat: (d) => `T-${maxTime - d}`,
-      label: null,
-      // tickRotate: -60,
-      reverse: true,
-    },
-    color: {
-      range: ["#f73d0a", "#1f1d1d"],
-      legend: true,
-      legendAnchor: "center",
-      style: {
-        color: "white",
-        fontSize: "14px",
-        "margin-left": "200px",
-      },
-    },
-  });
-  d3.selectAll("div > div#area > *").remove();
-  if (areaRef.current) {
-    areaRef.current.append(chart);
-  }
-}
-
-// async function drawAxis(svgRef, maxY, hexRadius, offsetY){
-//     const svg = d3.select(svgRef.current);
-//     const IPs = (await requestJSON('getUniqueIDs'))['userID'];
-//     const yScale = d3.scaleBand()
-//         .range([offsetY - hexRadius, maxY + hexRadius])
-//         .domain(IPs)
-//         .padding(0.05)
-
-//         svg
-//         .append("g")
-//         .attr("transform", `translate(${190 - hexRadius},0)`)
-//         .style('font-size', hexRadius-4)
-//         .style('color', "white")
-//         .call(d3.axisLeft(yScale).tickSize(0))
-//         .select(".domain").remove()
-
-//         svg
-//         .append("text")
-//         .attr("transform", `translate(${190 - hexRadius},0)`)
-//         .style('font-size', 16)
-//         .style('font-weight', "bold")
-//         .style('fill', "white")
-//         .attr("text-anchor", "end")
-//         .attr("y", 44)
-//         .text("USER EVENTS")
-
-//         svg
-//         .append("text")
-//         .attr("transform", `translate(${190 - hexRadius},0)`)
-//         .attr("class", "wordWrap")
-//         .style('font-size', 16)
-//         .style('font-weight', "bold")
-//         .style('fill', "white")
-//         .attr("text-anchor", "end")
-//         .attr("y", 66)
-//         .text("BY TIME")
-
-// }
 
 function drawLegend(svgRef) {
   let legend = Plot.legend({
@@ -163,10 +210,8 @@ export default class CustomD3 extends React.Component {
     this.areaRef = React.createRef();
     this.tooltipRef = React.createRef();
     this.legendRef = React.createRef();
-    this.points = [
-      { time: 0, events: 0, type: "anomalousEvents" },
-      { time: 0, events: 0, type: "totalEvents" },
-    ];
+    this.totalEvents = [];
+    this.anomalousEvents = [];
     this.offsetX = 200;
     this.offsetY = 100;
     this.hexRadius = 20;
@@ -175,17 +220,17 @@ export default class CustomD3 extends React.Component {
     this.state = {
       selectedEvent: {},
       currentTime: 0,
-      position: [],
-      colors: [],
+      position: null,
+      colors: null,
       userIDs: [],
       sort: true,
     };
-    this.waitTime = 500;
+    this.waitTime = 1000;
   }
   async componentDidMount() {
     const totalTime = parseInt(await requestJSON("getTotalTime"));
     drawLegend(this.legendRef);
-    let axisAdded = false;
+    // let axisAdded = false;
     // await timeout(5000); //for 5 sec delay
     for (let i = 90; i <= totalTime; i += 1) {
       const data = await requestJSON(
@@ -207,27 +252,29 @@ export default class CustomD3 extends React.Component {
 
       this.setState({
         currentTime: i,
-        position: elevation.batches[0].data.children[0].values,
-        colors: colors.batches[0].data.children[0].values,
-        userIDs: new TextDecoder().decode(
-          userIDs.batches[0].data.children[0].values
-        ),
+        position: elevation,
+        colors: colors,
+        userIDs: userIDs,
       });
-      this.points.push({
-        time: i,
-        events: data.totalAnomalousEvents,
-        type: "anomalousEvents",
-      });
-      this.points.push({
-        time: i,
-        events: data.totalEvents,
-        type: "totalEvents",
-      });
-      drawArea(this.areaRef, this.points, i);
-      // if(!axisAdded){
-      //     drawAxis(this.svg, data.maxY, this.hexRadius, this.offsetY);
-      //     axisAdded = true;
-      // }
+      const timeNow = +new Date();
+      this.anomalousEvents.push([timeNow, data.totalAnomalousEvents]);
+      this.totalEvents.push([timeNow, data.totalEvents]);
+
+      if (this.areaRef.current !== null) {
+        this.areaRef.current.getEchartsInstance().setOption({
+          series: [
+            {
+              name: "Network Traffic",
+              data: this.totalEvents,
+            },
+            {
+              name: "Anomalous Traffic",
+              data: this.anomalousEvents,
+            },
+          ],
+        });
+      }
+
       await timeout(this.waitTime); //for 5 sec delay
     }
   }
@@ -338,30 +385,35 @@ export default class CustomD3 extends React.Component {
     return (
       <div id="chart">
         <div className="topnav">
-          <a href="#home">DIGITAL FINGER PRINT | NVIDIA MORPHEUS</a>
+          <span> MORPHEUS | DFS </span>
           {/* <button id="play-button" className="active" onClick={}>Play</button> */}
         </div>
-        <div id="area" ref={this.areaRef}></div>
-        <hr className="partition"></hr>
-        <Box
-          rows={34}
-          cols={30}
-          apiURL={"three"}
-          waitTime={this.waitTime}
-          currentTime={this.state.currentTime}
-          position={this.state.position}
-          colors={this.state.colors}
-          userIDs={this.state.userIDs}
-        />
+        <div id="area">
+          <ReactCharts
+            ref={this.areaRef}
+            style={{
+              height: "100%",
+              width: "100%",
+            }}
+            option={AreaOptions}
+          />
+        </div>
+        {/* <hr className="partition"></hr> */}
         <div id="hexgrid">
-          <svg
-            id="legend"
-            ref={this.legendRef}
-            transform="translate(1620,-1020)"
-          ></svg>
-          {/* <div id="sidePanel">
-                        {selectedEvent}
-                    </div> */}
+          <Box
+            rows={34}
+            cols={30}
+            apiURL={"three"}
+            waitTime={this.waitTime}
+            currentTime={this.state.currentTime}
+            position={this.state.position}
+            colors={this.state.colors}
+            userIDs={this.state.userIDs}
+          />
+
+          <svg id="legend" ref={this.legendRef}></svg>
+
+          {/* <div id="sidePanel">{selectedEvent}</div> */}
         </div>
       </div>
     );

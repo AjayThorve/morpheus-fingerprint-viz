@@ -25,6 +25,8 @@
     "d3": "7.6.1",
     "d3-hexbin": "0.2.2",
     "d3-node": "^2.2.3",
+    "echarts": "^5.3.3",
+    "echarts-for-react": "^3.0.2",
     "h3-js": "^4.0.0-rc1",
     "next": "12.2.2",
     "next-transpile-modules": "^9.0.0",

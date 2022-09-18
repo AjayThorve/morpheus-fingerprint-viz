@@ -24,7 +24,7 @@ export function mapValuesToColorSeries(
   values,
   domain,
   colors_,
-  nullColor = { r: 0, g: 0, b: 0 }
+  nullColor = { r: 3, g: 3, b: 3 }
 ) {
   // validate colors and domain lengths
   if (colors_.length < 1 || domain.length < 1) {

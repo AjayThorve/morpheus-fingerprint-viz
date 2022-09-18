@@ -34,16 +34,20 @@ body {
 }
 
 #hexgrid {
-  padding-top: 0px;
-  width: 1500px;
-  height: 720px;
-  /* overflow-y: auto;
-  overflow-x: auto; */
+  width: 100vw;
+  height: 80vh;
+  top: 30vh;
 }
 
 #area {
-  width: 1900px;
-  height: 160px;
+  width: 100vw;
+  height: 22vh;
+}
+
+#legend {
+  top: 30vh;
+  right: 0;
+  position: fixed;
 }
 
 .wordWrap {
@@ -67,7 +71,7 @@ body {
 .partition {
   border: none;
   border-top: 3px double #f2f2f2;
-  color: #333;
+  color: #0f0f0f;
   overflow: visible;
   text-align: center;
   height: 5px;
@@ -78,20 +82,20 @@ body {
 }
 
 .topnav {
-  background-color: black;
+  background-color: #333;
   overflow: hidden;
   border-bottom-color: #76b900;
   border-bottom-style: double;
 }
 
-.topnav a,
+.topnav span,
 .customHeader {
   float: left;
   color: #f2f2f2;
   text-align: center;
   padding: 14px 16px;
   text-decoration: none;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: bold;
 }
 
@@ -121,9 +125,4 @@ body {
 
 .listOfAttributes {
   background-color: black !important;
-}
-
-#legend {
-  margin-top: 30px;
-  height: 70px;
 }
