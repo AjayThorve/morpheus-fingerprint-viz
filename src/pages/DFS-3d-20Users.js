@@ -1,13 +1,13 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import React from "react";
 import * as Plot from "@observablehq/plot";
-import * as echarts from "echarts";
 import CloseButton from "react-bootstrap/CloseButton";
 import ListGroup from "react-bootstrap/ListGroup";
-import { Data, tableFromIPC } from "apache-arrow";
+import { tableFromIPC } from "apache-arrow";
 import { fire } from "../components/colors";
 import ReactCharts from "echarts-for-react";
 import Box from "./Box-3d";
+import AreaChart from "../components/area";
 
 async function requestJSON(type = "getEventStats", params = null) {
   let url = `/api/three/${type}?`;
@@ -21,138 +21,6 @@ async function requestJSON(type = "getEventStats", params = null) {
     .then((res) => res.json())
     .catch((e) => console.log(e));
 }
-
-const AreaOptions = {
-  // left: "5%",
-  tooltip: {
-    trigger: "axis",
-    position: function (pt) {
-      return [pt[0], "10%"];
-    },
-  },
-  grid: {
-    left: 100,
-    right: 50,
-  },
-  title: {
-    textAlign: "left",
-    textVerticalAlign: "auto",
-    text: "Total Network Traffic Volume",
-    textStyle: {
-      color: "#ffffff",
-      fontSize: "18px",
-    },
-    top: "5%",
-    left: "2%",
-  },
-  color: ["#f73d0a", "#ffffff"],
-  legend: {
-    data: [
-      {
-        name: "Anomalous Traffic",
-        icon: "square",
-      },
-      {
-        name: "Network Traffic",
-        icon: "square",
-      },
-    ],
-    textStyle: {
-      color: "#ffffff",
-      fontSize: "14px",
-    },
-    bottom: "5%",
-    left: "5%",
-  },
-  xAxis: {
-    type: "time",
-    name: "Time",
-    nameLocation: "end",
-    nameTextStyle: {
-      color: "#ffffff",
-      fontWeight: "bold",
-      verticalAlign: "top",
-      lineHeight: 30,
-      fontSize: 14,
-    },
-    textStyle: {
-      color: "#ffffff",
-    },
-    splitLine: { interval: 2 },
-    axisLabel: { color: "#ffffff" },
-    inverse: true,
-  },
-  yAxis: {
-    type: "value",
-    name: "Events",
-    nameLocation: "middle",
-    nameTextStyle: {
-      color: "#ffffff",
-      fontWeight: "bold",
-      fontSize: 14,
-    },
-    axisLabel: { color: "#ffffff", align: "right" },
-    splitLine: { lineStyle: { opacity: 0.2 } },
-    nameGap: 50,
-  },
-  // dataZoom: [
-  //   {
-  //     start: 100,
-  //     end: 50,
-  //   },
-  // ],
-  series: [
-    {
-      name: "Anomalous Traffic",
-      type: "line",
-      symbol: "none",
-      stack: true,
-      lineStyle: {
-        width: 0.7,
-      },
-      areaStyle: {
-        opacity: 1,
-        color: new echarts.graphic.LinearGradient(0, 0, 0, 1.5, [
-          {
-            offset: 0,
-            color: "#f73d0a",
-          },
-          {
-            offset: 1,
-            color: "#000000",
-          },
-        ]),
-      },
-      data: [],
-    },
-    {
-      name: "Network Traffic",
-      type: "line",
-      symbol: "none",
-      stack: true,
-      lineStyle: {
-        width: 0.7,
-        color: "#ffffff",
-      },
-      areaStyle: {
-        opacity: 0.7,
-        color: new echarts.graphic.LinearGradient(0, 0, 0, 1.5, [
-          {
-            offset: 0,
-            color: "#ffffff",
-          },
-          {
-            offset: 1,
-            color: "#000000",
-          },
-        ]),
-      },
-      data: [],
-    },
-  ],
-  notMerge: true,
-  backgroundColor: "#0f0f0f",
-};
 
 async function requestData(type = "getDF", params = null) {
   let url = `/api/three/${type}?`;
@@ -210,8 +78,6 @@ export default class CustomD3 extends React.Component {
     this.areaRef = React.createRef();
     this.tooltipRef = React.createRef();
     this.legendRef = React.createRef();
-    this.totalEvents = [];
-    this.anomalousEvents = [];
     this.offsetX = 200;
     this.offsetY = 100;
     this.hexRadius = 20;
@@ -224,6 +90,8 @@ export default class CustomD3 extends React.Component {
       colors: null,
       userIDs: [],
       sort: true,
+      totalEvents: [],
+      anomalousEvents: [],
     };
     this.waitTime = 1000;
   }
@@ -249,32 +117,20 @@ export default class CustomD3 extends React.Component {
         "getUniqueIDs",
         `time=${i}&sort=${this.state.sort}`
       );
+      const timeNow = +new Date();
 
       this.setState({
         currentTime: i,
         position: elevation,
         colors: colors,
         userIDs: userIDs,
+        anomalousEvents: this.state.anomalousEvents.concat([
+          [timeNow, data.totalAnomalousEvents],
+        ]),
+        totalEvents: this.state.totalEvents.concat([
+          [timeNow, data.totalEvents],
+        ]),
       });
-      const timeNow = +new Date();
-      this.anomalousEvents.push([timeNow, data.totalAnomalousEvents]);
-      this.totalEvents.push([timeNow, data.totalEvents]);
-
-      if (this.areaRef.current !== null) {
-        this.areaRef.current.getEchartsInstance().setOption({
-          series: [
-            {
-              name: "Network Traffic",
-              data: this.totalEvents,
-            },
-            {
-              name: "Anomalous Traffic",
-              data: this.anomalousEvents,
-            },
-          ],
-        });
-      }
-
       await timeout(this.waitTime); //for 5 sec delay
     }
   }
@@ -389,13 +245,9 @@ export default class CustomD3 extends React.Component {
           {/* <button id="play-button" className="active" onClick={}>Play</button> */}
         </div>
         <div id="area">
-          <ReactCharts
-            ref={this.areaRef}
-            style={{
-              height: "100%",
-              width: "100%",
-            }}
-            option={AreaOptions}
+          <AreaChart
+            totalEvents={this.state.totalEvents}
+            anomalousEvents={this.state.anomalousEvents}
           />
         </div>
         {/* <hr className="partition"></hr> */}
