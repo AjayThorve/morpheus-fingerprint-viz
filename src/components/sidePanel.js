@@ -19,16 +19,7 @@ async function requestJSON(type = "getEventByIndex", params = null) {
 function SidePanel({ allEvents }) {
   const [selectedEvent, setSelectedEvent] = useState("");
   const [selectedEventData, setSelectedEventData] = useState({});
-  const legendRef = useRef(null);
 
-  //   useEffect(() => {
-  //     drawLegend(
-  //       legendRef,
-  //       "appDisplayName",
-  //       selectedEventData["appDisplayName_score_mean"],
-  //       selectedEventData["appDisplayName_score"]
-  //     );
-  //   }, [selectedEventData]);
   useEffect(() => {
     const fetchData = async () => {
       const result = await requestJSON(
@@ -120,7 +111,6 @@ function SidePanel({ allEvents }) {
                 {attr == "anomalyScore"
                   ? parseFloat(selectedEventData[attr]).toFixed(3)
                   : selectedEventData[attr]}
-                {/* {IPAddressLookup[this.state.selectedEvent["userID"]]} */}
               </span>
               <Ruler
                 mean={selectedEventData[attr + "_score_mean"]}
