@@ -71,7 +71,7 @@ body {
   background-color: black !important;
   border-style: double;
   border-color: #333 !important;
-  opacity: 0.9;
+  opacity: 0.95;
   float: right;
   z-index: 100;
   position: relative;
@@ -98,8 +98,7 @@ body {
 }
 
 .topnav span,
-.topnav a,
-.customHeader {
+.topnav a {
   float: left;
   color: #f2f2f2;
   text-align: center;
@@ -110,13 +109,14 @@ body {
 }
 
 .selectedEventTitle {
-  color: #f2f2f2;
-  font-size: 17px;
+  color: gray;
+  /* padding: 0px; */
+  font-size: 14px;
   font-weight: bold;
 }
 
 .selectedEvent {
-  color: #b95422;
+  color: #f2f2f2;
 }
 
 #anomalyNumber {
@@ -125,9 +125,94 @@ body {
 }
 
 .customHeader {
-  font-size: 20px;
+  float: left;
+  color: #f2f2f2;
+  padding-top: 14px;
+  padding-bottom: 5px;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
 }
 
 .listOfAttributes {
   background-color: black !important;
+  padding: 0px !important;
+}
+
+#eventsDropDown {
+  background-color: #333;
+  color: white;
+  width: 85%;
+  float: right;
+}
+
+.ruler {
+  margin: 0px 5px -5px 0px;
+  display: flex;
+  /* display: none; */
+}
+.ruler .ruler-rule {
+  border-left: solid 0px;
+  border-bottom: solid 1px;
+  display: flex;
+  flex-grow: 1;
+  flex-shrink: 1;
+  padding: 5px 0px;
+}
+
+.ruler-rule:nth-child(10n) {
+  border-left: solid 1px;
+}
+
+.ruler-rule:first-child {
+  border-left: solid 1px;
+}
+
+.ruler .ruler-rule:last-child {
+  border-right: solid 0px;
+  border-bottom: solid 0px;
+}
+
+.ruler-bg {
+  background-color: white;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 10px #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #333;
+  outline: 1px solid #333;
+}
+
+.statLabel {
+  font-size: 18;
+}
+
+.underline {
+  border-bottom: solid 1px gray;
+}
+.colorBarAxis {
+  display: inline-block;
+  vertical-align: top;
+  color: #f2f2f2;
+}
+
+#colorBarAnomalousScale {
+  height: 18px;
+  margin-top: 0;
+  margin-bottom: 0;
+  opacity: 1;
+  border: solid 0.1px #333;
+  background: linear-gradient(
+    90deg,
+    rgba(33, 33, 33, 1) 5%,
+    rgba(247, 24, 0, 1) 6%,
+    rgba(255, 255, 0, 1) 100%
+  );
 }

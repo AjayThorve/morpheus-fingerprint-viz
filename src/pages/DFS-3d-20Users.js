@@ -1,10 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import React from "react";
-import * as Plot from "@observablehq/plot";
-import CloseButton from "react-bootstrap/CloseButton";
-import ListGroup from "react-bootstrap/ListGroup";
 import { tableFromIPC } from "apache-arrow";
-import { fire } from "../components/colors";
 import Image from "next/image";
 import Box from "./Box-3d";
 import AreaChart from "../components/area";
@@ -34,38 +30,6 @@ async function requestData(type = "getDF", params = null) {
   });
   const table = tableFromIPC(result);
   return table;
-}
-
-function drawLegend(svgRef) {
-  let legend = Plot.legend({
-    color: {
-      type: "sequential",
-      domain: [0, 1],
-      range: fire,
-      tickRotate: 90,
-      tickFormat: (d) => {
-        if (d == 0.4) {
-          return "Anomaly (>0.385)";
-        }
-        if (d == 0 || d == 1) {
-          return d;
-        }
-        return null;
-      },
-      label: "Anomaly Score",
-    },
-    width: 280,
-    height: 25,
-    marginLeft: 25,
-    marginBottom: 0,
-    paddingBottom: 0,
-    swatchSize: 11,
-    style: {
-      color: "white",
-      fontSize: "14px",
-    },
-  });
-  svgRef.current.append(legend);
 }
 
 function timeout(delay) {
@@ -161,108 +125,6 @@ export default class CustomD3 extends React.Component {
   }
 
   render() {
-    let selectedEvent;
-    let anomalyScore;
-    let maliciousHeader;
-    let maliciousFooter;
-    if (
-      this.state.selectedEvent.anomalyScore ||
-      this.state.selectedEvent.anomalyScore == 0
-    ) {
-      const events = [];
-      if (this.state.selectedEvent.anomalousAttributes) {
-        this.state.selectedEvent.anomalousAttributes
-          .split(",")
-          .forEach((key) => {
-            events.push(key);
-          });
-        maliciousHeader = (
-          <div className="customHeader">Malicious Attributes</div>
-        );
-        anomalyScore = (
-          <ListGroup.Item
-            className="listOfAttributes"
-            variant="dark"
-            key={"anomalyScore"}
-          >
-            <span className="selectedEventTitle">
-              anomalyScore:{" "}
-              <span
-                className="selectedEvent"
-                style={{
-                  "font-size": "18px",
-                  color: this.color(this.state.selectedEvent["anomalyScore"]),
-                }}
-              >
-                {Math.round(this.state.selectedEvent["anomalyScore"] * 100) /
-                  100}
-              </span>
-            </span>
-          </ListGroup.Item>
-        );
-      }
-      const conditionalBreakLine = this.state.selectedEvent
-        .anomalousAttributes ? (
-        <hr className="partition"></hr>
-      ) : (
-        ""
-      );
-      selectedEvent = (
-        <div id="sidePanel" className="detailsPanel">
-          <ListGroup>
-            <CloseButton variant="white" onClick={this.resetSelected} />
-            <div className="customHeader">Event Information</div>
-            <ListGroup.Item
-              className="listOfAttributes"
-              variant="dark"
-              key={"userID"}
-            >
-              <span className="selectedEventTitle">
-                userID:{" "}
-                <span className="selectedEvent">
-                  {IPAddressLookup[this.state.selectedEvent["userID"]]}
-                </span>
-              </span>
-            </ListGroup.Item>
-            <ListGroup.Item
-              className="listOfAttributes"
-              variant="dark"
-              key={"time"}
-            >
-              <span className="selectedEventTitle">
-                Time:{" "}
-                <span className="selectedEvent">
-                  {this.state.selectedEvent["time"]}
-                </span>
-              </span>
-            </ListGroup.Item>
-            {conditionalBreakLine}
-            {maliciousHeader}
-            {anomalyScore}
-            {events.map((key) => (
-              <ListGroup.Item
-                className="listOfAttributes"
-                variant="dark"
-                key={key}
-              >
-                <span className="selectedEventTitle">
-                  {key}:{" "}
-                  <span className="selectedEvent">
-                    {this.state.selectedEvent[key]}
-                  </span>
-                </span>
-              </ListGroup.Item>
-            ))}
-            {maliciousFooter}
-          </ListGroup>
-        </div>
-      );
-      anomalyScore = (
-        <span className="selectedEvent" id="anomalyNumber">
-          {parseFloat(this.state.selectedEvent.anomalyScore).toFixed(2)}{" "}
-        </span>
-      );
-    }
     return (
       <div id="chart">
         <div className="topnav">
@@ -283,7 +145,6 @@ export default class CustomD3 extends React.Component {
             anomalousEvents={this.state.anomalousEvents}
           />
         </div>
-        {/* <hr className="partition"></hr> */}
         <div id="hexgrid">
           <Box
             rows={34}
@@ -303,10 +164,6 @@ export default class CustomD3 extends React.Component {
             selectedEvent={this.state.selectedEvent}
             allEvents={this.state.allEvents}
           ></SidePanel>
-
-          {/* <svg id="legend" ref={this.legendRef}></svg> */}
-
-          {/* <div id="sidePanel">{selectedEvent}</div> */}
         </div>
       </div>
     );

@@ -16,7 +16,7 @@ async function sendDF(df, res) {
 
 let data = DataFrame.readParquet({
   sourceType: "files",
-  sources: ["./public/data/interesting-users-34.parquet"],
+  sources: ["./public/data/interesting-users-34-enriched.parquet"],
 }).rename({ anomaly_score: "anomalyScore" });
 
 data = data.assign({
@@ -301,7 +301,7 @@ function print(df) {
   console.log(df.toArrow().toArray());
 }
 
-function getData(instanceID, df, sort = false) {
+function getInstances(instanceID, df, sort = false) {
   let order = sort
     ? df
         .select(["userID", "anomalyScore"])
@@ -321,7 +321,7 @@ function getData(instanceID, df, sort = false) {
     .eq(userID)
     .logicalAnd(data.get("time").eq(time));
   print(data.filter(resultMask).head(2));
-  return data.filter(resultMask).select(["time", "index"]);
+  return data.filter(resultMask).select(["time", "index", "anomalyScore"]);
 }
 
 function generateData(df, type = "elevation", sort = false) {
@@ -454,7 +454,7 @@ export default async function handler(req, res) {
       totalAnomalousEvents: events.filter(events.get("anomalyScore").ge(0.385))
         .numRows,
     });
-  } else if (fn == "getInstanceData") {
+  } else if (fn == "getInstances") {
     const time = req.query.time
       ? parseInt(req.query.time)
       : data.get("time").min();
@@ -465,7 +465,21 @@ export default async function handler(req, res) {
     console.log(id, time);
     if (id >= 0) {
       res.send({
-        result: getData(id, tempData, sort).toArrow().toArray(),
+        result: getInstances(id, tempData, sort).toArrow().toArray(),
+      });
+    } else {
+      res.send({
+        result: null,
+      });
+    }
+  } else if (fn == "getEventByIndex") {
+    const index = parseInt(req.query.index);
+    const tempData = data.filter(data.get("index").eq(index));
+
+    print(tempData);
+    if (index >= 0) {
+      res.send({
+        result: tempData.toArrow().toArray(),
       });
     } else {
       res.send({

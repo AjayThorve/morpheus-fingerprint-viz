@@ -11,7 +11,7 @@ import { Stats, Text } from "@react-three/drei";
 
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
-async function requestJSON(type = "getInstanceData", params = null) {
+async function requestJSON(type = "getInstances", params = null) {
   let url = `/api/three/${type}?`;
   if (params != null) {
     url += `${params}`;
@@ -109,7 +109,7 @@ class HexGrid extends React.Component {
             const id = e.instanceId;
             console.log(id);
             const result = await requestJSON(
-              "getInstanceData",
+              "getInstances",
               `time=${this.props.currentTime}&id=${id}&sort=true`
             );
             this.props.setEvents(result["result"]);
