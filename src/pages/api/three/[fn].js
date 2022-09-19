@@ -400,8 +400,8 @@ function generateData(df, type = "elevation", sort = false) {
   if (type == "colors") {
     const colors = mapValuesToColorSeries(
       tempData.get("anomalyScoreMax"),
-      [0.1, 1, 0.01],
-      fire
+      [0.1, 0.385, 0.01],
+      ["#f00", "#ff0"]
     );
     tempData = tempData.assign({
       color_r: colors.color_r,

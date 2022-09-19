@@ -17,6 +17,7 @@ async function requestJSON(type = "getEventByIndex", params = null) {
 function SidePanel({ allEvents }) {
   const [selectedEvent, setSelectedEvent] = useState("");
   const [selectedEventData, setSelectedEventData] = useState({});
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,14 +33,19 @@ function SidePanel({ allEvents }) {
   useEffect(() => {
     if (allEvents.length > 0) {
       setSelectedEvent(allEvents[0].index);
+      setShow(true);
     }
   }, [allEvents]);
 
   return (
-    <div id="sidePanel" className="detailsPanel" style={{ display: "inline" }}>
+    <div
+      id="sidePanel"
+      className="detailsPanel"
+      style={{ display: show ? "inline" : "none" }}
+    >
       <ListGroup>
         <label>
-          <CloseButton variant="white" />
+          <CloseButton variant="white" onClick={() => setShow(false)} />
           <select
             name="events"
             id="eventsDropDown"

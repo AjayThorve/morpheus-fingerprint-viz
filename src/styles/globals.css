@@ -212,7 +212,7 @@ body {
   background: linear-gradient(
     90deg,
     rgba(33, 33, 33, 1) 5%,
-    rgba(247, 24, 0, 1) 6%,
-    rgba(255, 255, 0, 1) 100%
+    rgba(255, 0, 0, 1) 6%,
+    rgba(255, 255, 0, 1) 50%
   );
 }

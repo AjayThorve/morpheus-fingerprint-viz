@@ -134,7 +134,7 @@ export default class CustomD3 extends React.Component {
               alt="nv_logo"
               src="/nvLogo.png"
               height={50}
-              width={120}
+              width={100}
             ></Image>
           </div>
           {/* <button id="play-button" className="active" onClick={}>Play</button> */}

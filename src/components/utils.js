@@ -24,34 +24,32 @@ export function mapValuesToColorSeries(
   values,
   domain,
   colors_,
-  nullColor = { r: 3, g: 3, b: 3 }
+  nullColor = { r: 33, g: 33, b: 33 }
 ) {
   // validate colors and domain lengths
   if (colors_.length < 1 || domain.length < 1) {
     throw new Error("colors and domain must be arrays of length 1 or greater");
   }
   const colors = d3
-    .scaleSequential(d3.interpolateRgbBasisClosed(colors_))
-    .domain([0, domain[1]]);
+    .scaleSequential()
+    .interpolator(d3.interpolateRgb(colors_[0], colors_[1]))
+    .domain([domain[0] * 100, domain[1] * 100]);
 
-  // console.log(colors(0), colors(0.38));
-
-  const color = hexToRgb(colors(0));
   const color_r = Series.sequence({
     step: 0,
-    init: color.r,
+    init: nullColor.r / 255,
     type: new Float32(),
     size: values.length,
   });
   const color_g = Series.sequence({
     step: 0,
-    init: color.g,
+    init: nullColor.g / 255,
     type: new Float32(),
     size: values.length,
   });
   const color_b = Series.sequence({
     step: 0,
-    init: color.b,
+    init: nullColor.b / 255,
     type: new Float32(),
     size: values.length,
   });
@@ -66,7 +64,7 @@ export function mapValuesToColorSeries(
   if (domain.length == 1) {
     const boolMask = values.ge(domain[0]);
     const indices = colorIndices.filter(boolMask);
-    const color = hexToRgb(colors(domain[0]));
+    const color = hexToRgb(colors(domain[0] * 100));
     color_r.setValues(indices, color.r);
     color_g.setValues(indices, color.g);
     color_b.setValues(indices, color.b);
@@ -74,8 +72,7 @@ export function mapValuesToColorSeries(
     for (let i = domain[0]; i < domain[1]; i += domain[2]) {
       const boolMask = values.ge(i);
       const indices = colorIndices.filter(boolMask);
-      // console.log(i, indices.length);
-      const color = hexToRgb(colors(i));
+      const color = hexToRgb(colors(i * 100));
       color_r.setValues(indices, color.r);
       color_g.setValues(indices, color.g);
       color_b.setValues(indices, color.b);
@@ -85,9 +82,9 @@ export function mapValuesToColorSeries(
   if (values.countNonNulls() !== values.length) {
     // contains null values
     const indices = colorIndices.filter(values.isNull());
-    color_r.setValues(indices, nullColor.r);
-    color_g.setValues(indices, nullColor.g);
-    color_b.setValues(indices, nullColor.b);
+    color_r.setValues(indices, nullColor.r / 255);
+    color_g.setValues(indices, nullColor.g / 255);
+    color_b.setValues(indices, nullColor.b / 255);
   }
 
   return { color_r, color_g, color_b };
