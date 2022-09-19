@@ -56,11 +56,12 @@ function AreaChart({ totalEvents, anomalousEvents }) {
         lineHeight: 30,
         fontSize: 14,
       },
+      axisTick: { length: 10 },
       textStyle: {
         color: "#ffffff",
       },
-      splitLine: { interval: 2 },
-      axisLabel: { color: "#ffffff" },
+      // splitLine: { interval: 2 },
+      axisLabel: { color: "#ffffff", margin: 15 },
       inverse: true,
     },
     yAxis: {
@@ -98,7 +99,7 @@ function AreaChart({ totalEvents, anomalousEvents }) {
             },
           ]),
         },
-        data: [],
+        data: anomalousEvents,
       },
       {
         name: "Network Traffic",
@@ -122,30 +123,12 @@ function AreaChart({ totalEvents, anomalousEvents }) {
             },
           ]),
         },
-        data: [],
+        data: totalEvents,
       },
     ],
     notMerge: true,
     backgroundColor: "#0f0f0f",
   };
-
-  useEffect(() => {
-    console.log(totalEvents);
-    if (areaRef.current !== null) {
-      areaRef.current.getEchartsInstance().setOption({
-        series: [
-          {
-            name: "Network Traffic",
-            data: totalEvents,
-          },
-          {
-            name: "Anomalous Traffic",
-            data: anomalousEvents,
-          },
-        ],
-      });
-    }
-  }, [totalEvents, anomalousEvents]);
 
   return (
     <ReactCharts

@@ -5,7 +5,7 @@ const { mapValuesToColorSeries } = require("../../../components/utils");
 const { fire } = require("../../../components/colors");
 
 const { colors } = require("../../../components/colors");
-const maxCols = 30;
+const maxCols = 48;
 
 async function sendDF(df, res) {
   await pipeline(
@@ -367,11 +367,14 @@ function generateData(df, type = "elevation", sort = false) {
       .join({ other: paddingDF, on: ["userID"], how: "outer", rsuffix: "_r" })
       .drop(["userID_r"])
       .sortValues({ userID: { ascending: true } });
-    
 
     sortedResults = sortedResults.gather(order);
     const gridTime = (df.get("time").max() - t) % maxCols;
-    const gridIndex = df.get("userID").unique().add(maxRows * gridTime).cast(new Int32());
+    const gridIndex = df
+      .get("userID")
+      .unique()
+      .add(maxRows * gridTime)
+      .cast(new Int32());
 
     if (type == "elevation") {
       const elevation = sortedResults.get("elevation").replaceNulls(0).div(t);

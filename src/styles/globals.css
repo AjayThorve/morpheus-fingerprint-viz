@@ -45,8 +45,9 @@ body {
 }
 
 #legend {
-  top: 30vh;
+  top: 28vh;
   right: 0;
+  height: 50px;
   position: fixed;
 }
 
@@ -89,6 +90,7 @@ body {
 }
 
 .topnav span,
+.topnav a,
 .customHeader {
   float: left;
   color: #f2f2f2;

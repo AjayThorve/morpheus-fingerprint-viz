@@ -152,6 +152,92 @@ class HexGrid extends React.Component {
         >
           {this.state.userIDs}
         </Text>
+        <Text
+          scale={[1, 1, 1]}
+          rotation={[-1.57, 0, 0]}
+          color="white" // default
+          fontSize={20}
+          maxWidth={1800}
+          anchorY={"right"}
+          position-x={812}
+          position-z={-50}
+          lineHeight={1.5}
+        >
+          {Array(48).fill("|      ").join("")}
+        </Text>
+        <Text
+          scale={[1, 1, 1]}
+          rotation={[-1.57, 0, 0]}
+          color="white" // default
+          fontSize={18}
+          maxWidth={1800}
+          anchorY={"right"}
+          position-x={0}
+          position-z={-75}
+          lineHeight={1.5}
+        >
+          {"Now"}
+        </Text>
+        <Text
+          scale={[1, 1, 1]}
+          rotation={[-1.57, 0, 0]}
+          color="white" // default
+          fontSize={18}
+          maxWidth={1800}
+          anchorY={"right"}
+          position-x={400}
+          position-z={-75}
+          lineHeight={1.5}
+        >
+          {new Date(+new Date() - 10000).toLocaleTimeString("en-US", {
+            hour12: false,
+          })}
+        </Text>
+        <Text
+          scale={[1, 1, 1]}
+          rotation={[-1.57, 0, 0]}
+          color="white" // default
+          fontSize={18}
+          maxWidth={1800}
+          anchorY={"right"}
+          position-x={800}
+          position-z={-75}
+          lineHeight={1.5}
+        >
+          {new Date(+new Date() - 20000).toLocaleTimeString("en-US", {
+            hour12: false,
+          })}
+        </Text>
+        <Text
+          scale={[1, 1, 1]}
+          rotation={[-1.57, 0, 0]}
+          color="white" // default
+          fontSize={18}
+          maxWidth={1800}
+          anchorY={"right"}
+          position-x={1200}
+          position-z={-75}
+          lineHeight={1.5}
+        >
+          {new Date(+new Date() - 30000).toLocaleTimeString("en-US", {
+            hour12: false,
+          })}
+        </Text>
+        <Text
+          scale={[1, 1, 1]}
+          rotation={[-1.57, 0, 0]}
+          color="white" // default
+          fontSize={18}
+          maxWidth={1800}
+          anchorY={"right"}
+          position-x={1600}
+          position-z={-75}
+          lineHeight={1.5}
+        >
+          {new Date(+new Date() - 40000).toLocaleTimeString("en-US", {
+            hour12: false,
+          })}
+        </Text>
       </mesh>
     );
   }

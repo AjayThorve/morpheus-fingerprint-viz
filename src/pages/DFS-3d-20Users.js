@@ -54,7 +54,7 @@ function drawLegend(svgRef) {
       label: "Anomaly Score",
     },
     width: 280,
-    height: 30,
+    height: 25,
     marginLeft: 25,
     marginBottom: 0,
     paddingBottom: 0,
@@ -97,7 +97,7 @@ export default class CustomD3 extends React.Component {
   }
   async componentDidMount() {
     const totalTime = parseInt(await requestJSON("getTotalTime"));
-    drawLegend(this.legendRef);
+    // drawLegend(this.legendRef);
     // let axisAdded = false;
     // await timeout(5000); //for 5 sec delay
     for (let i = 90; i <= totalTime; i += 1) {
@@ -254,7 +254,7 @@ export default class CustomD3 extends React.Component {
         <div id="hexgrid">
           <Box
             rows={34}
-            cols={30}
+            cols={48}
             apiURL={"three"}
             waitTime={this.waitTime}
             currentTime={this.state.currentTime}
@@ -263,7 +263,7 @@ export default class CustomD3 extends React.Component {
             userIDs={this.state.userIDs}
           />
 
-          <svg id="legend" ref={this.legendRef}></svg>
+          {/* <svg id="legend" ref={this.legendRef}></svg> */}
 
           {/* <div id="sidePanel">{selectedEvent}</div> */}
         </div>
