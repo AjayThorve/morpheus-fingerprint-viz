@@ -34,7 +34,9 @@
     "react-bootstrap": "2.4.0",
     "react-dom": "18.2.0",
     "three": "^0.143.0",
-    "three-mesh-bvh": "^0.5.15"
+    "three-mesh-bvh": "^0.5.15",
+    "jsdom": "^16.5.0",
+    "moment-timezone": "^0.5.35"
   },
   "devDependencies": {
     "eslint": "8.20.0",
