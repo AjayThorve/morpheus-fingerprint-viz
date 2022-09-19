@@ -2,7 +2,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import React from "react";
 import { tableFromIPC } from "apache-arrow";
 import Image from "next/image";
-import Box from "./Box-3d";
+import Box from "../components/Box-3d";
 import AreaChart from "../components/area";
 import SidePanel from "../components/sidePanel";
 

@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import CloseButton from "react-bootstrap/CloseButton";
 import ListGroup from "react-bootstrap/ListGroup";
-import * as Plot from "@observablehq/plot";
-import * as d3 from "d3";
 import Ruler from "./ruler";
 
 async function requestJSON(type = "getEventByIndex", params = null) {
