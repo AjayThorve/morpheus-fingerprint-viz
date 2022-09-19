@@ -1,11 +1,4 @@
-import {
-  DataFrame,
-  IndexType,
-  Series,
-  Uint32,
-  Float32,
-  Uint32Series,
-} from "@rapidsai/cudf";
+import { Series, Uint32, Float32 } from "@rapidsai/cudf";
 const D3Node = require("d3-node");
 const d3 = new D3Node().d3; // initializes D3 with container element
 

@@ -2,9 +2,6 @@ const { RecordBatchStreamWriter } = require("apache-arrow");
 const pipeline = require("util").promisify(require("stream").pipeline);
 const { DataFrame, Int32, Series, Float32 } = require("@rapidsai/cudf");
 const { mapValuesToColorSeries } = require("../../../components/utils");
-const { fire } = require("../../../components/colors");
-
-const { colors } = require("../../../components/colors");
 const maxCols = 48;
 
 async function sendDF(df, res) {
