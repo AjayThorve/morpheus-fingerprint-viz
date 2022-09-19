@@ -1,5 +1,5 @@
 import ReactCharts from "echarts-for-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef } from "react";
 import * as echarts from "echarts";
 
 function AreaChart({ totalEvents, anomalousEvents }) {

@@ -56,17 +56,25 @@ body {
   width: 10px;
 }
 
+#HexBox {
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+}
+
 #sidePanel {
   overflow-y: auto;
   width: 350px;
-  height: 720px;
-  padding-top: 0px;
+  height: 71vh;
+  padding: 19px;
+  margin-top: 10px;
   background-color: black !important;
   border-style: double;
   border-color: #333 !important;
   opacity: 0.9;
   float: right;
-  margin-top: -640px;
+  z-index: 100;
+  position: relative;
 }
 
 .partition {
@@ -109,11 +117,6 @@ body {
 
 .selectedEvent {
   color: #b95422;
-}
-
-.App {
-  width: 100vw;
-  height: 100vh;
 }
 
 #anomalyNumber {

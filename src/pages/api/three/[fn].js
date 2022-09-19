@@ -320,7 +320,8 @@ function getData(instanceID, df, sort = false) {
     .get("userID")
     .eq(userID)
     .logicalAnd(data.get("time").eq(time));
-  return data.filter(resultMask).select(["userID"]);
+  print(data.filter(resultMask).head(2));
+  return data.filter(resultMask).select(["time", "index"]);
 }
 
 function generateData(df, type = "elevation", sort = false) {

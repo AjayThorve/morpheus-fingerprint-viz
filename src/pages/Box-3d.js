@@ -112,7 +112,7 @@ class HexGrid extends React.Component {
               "getInstanceData",
               `time=${this.props.currentTime}&id=${id}&sort=true`
             );
-            console.log(result);
+            this.props.setEvents(result["result"]);
           }}
           onPointerLeave={(e) => {
             e.stopPropagation();
@@ -265,7 +265,7 @@ export default class Box extends React.Component {
   }
   render() {
     return (
-      <div className="App">
+      <div id="HexBox">
         <Canvas id="xyz" linear={true}>
           <color attach="background" args={["#000"]} />
           <ambientLight color={0xffffff} />
@@ -283,6 +283,9 @@ export default class Box extends React.Component {
             position={this.props.position}
             colors={this.props.colors}
             userIDs={this.props.userIDs}
+            setEvents={this.props.setEvents}
+            setSelectedEvent={this.props.setSelectedEvent}
+            resetSelected={this.props.resetSelected}
           />
           <MapControls
             makeDefault

@@ -5,9 +5,10 @@ import CloseButton from "react-bootstrap/CloseButton";
 import ListGroup from "react-bootstrap/ListGroup";
 import { tableFromIPC } from "apache-arrow";
 import { fire } from "../components/colors";
-import ReactCharts from "echarts-for-react";
+import Image from "next/image";
 import Box from "./Box-3d";
 import AreaChart from "../components/area";
+import SidePanel from "../components/sidePanel";
 
 async function requestJSON(type = "getEventStats", params = null) {
   let url = `/api/three/${type}?`;
@@ -78,6 +79,9 @@ export default class CustomD3 extends React.Component {
     this.areaRef = React.createRef();
     this.tooltipRef = React.createRef();
     this.legendRef = React.createRef();
+    this.resetSelected = this.resetSelected.bind(this);
+    this.setEvents = this.setEvents.bind(this);
+    this.setSelectedEvent = this.setSelectedEvent.bind(this);
     this.offsetX = 200;
     this.offsetY = 100;
     this.hexRadius = 20;
@@ -85,6 +89,7 @@ export default class CustomD3 extends React.Component {
     this.hexgridHeight = this.hexRadius * 50;
     this.state = {
       selectedEvent: {},
+      allEvents: [],
       currentTime: 0,
       position: null,
       colors: null,
@@ -133,6 +138,26 @@ export default class CustomD3 extends React.Component {
       });
       await timeout(this.waitTime); //for 5 sec delay
     }
+  }
+
+  resetSelected() {
+    if (this.state.selectedEvent !== {}) {
+      this.setState({
+        selectedEvent: {},
+      });
+    }
+  }
+
+  setEvents(events) {
+    this.setState({
+      allEvents: events,
+    });
+  }
+
+  setSelectedEvent(event) {
+    this.setState({
+      selectedEvent: event,
+    });
   }
 
   render() {
@@ -242,6 +267,14 @@ export default class CustomD3 extends React.Component {
       <div id="chart">
         <div className="topnav">
           <span> MORPHEUS | DFS </span>
+          <div style={{ float: "right", margin: "0" }}>
+            <Image
+              alt="nv_logo"
+              src="/nvLogo.png"
+              height={50}
+              width={120}
+            ></Image>
+          </div>
           {/* <button id="play-button" className="active" onClick={}>Play</button> */}
         </div>
         <div id="area">
@@ -261,7 +294,15 @@ export default class CustomD3 extends React.Component {
             position={this.state.position}
             colors={this.state.colors}
             userIDs={this.state.userIDs}
+            setEvents={this.setEvents}
+            setSelectedEvent={this.setSelectedEvent}
+            resetSelected={this.resetSelected}
           />
+
+          <SidePanel
+            selectedEvent={this.state.selectedEvent}
+            allEvents={this.state.allEvents}
+          ></SidePanel>
 
           {/* <svg id="legend" ref={this.legendRef}></svg> */}
 
