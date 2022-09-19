@@ -243,7 +243,7 @@ class HexGrid extends React.Component {
   }
 }
 
-export default class Box extends React.Component {
+export default class HexGrid3d extends React.Component {
   constructor(props) {
     super(props);
     this.state = {

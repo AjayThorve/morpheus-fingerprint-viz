@@ -2,7 +2,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import React from "react";
 import { tableFromIPC } from "apache-arrow";
 import Image from "next/image";
-import Box from "../components/Box-3d";
+import HexGrid3d from "../components/hexgrid-3d";
 import AreaChart from "../components/area";
 import SidePanel from "../components/sidePanel";
 
@@ -146,7 +146,7 @@ export default class CustomD3 extends React.Component {
           />
         </div>
         <div id="hexgrid">
-          <Box
+          <HexGrid3d
             rows={34}
             cols={48}
             apiURL={"three"}
