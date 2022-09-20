@@ -5,6 +5,7 @@ import Image from "next/image";
 import HexGrid3d from "../components/hexgrid-3d";
 import AreaChart from "../components/area";
 import SidePanel from "../components/sidePanel";
+import ConfigPanel from "../components/leftConfigPanel";
 
 async function requestJSON(type = "getEventStats", params = null) {
   let url = `/api/three/${type}?`;
@@ -128,6 +129,7 @@ export default class CustomD3 extends React.Component {
     return (
       <div id="chart">
         <div className="topnav">
+          <ConfigPanel />
           <span> MORPHEUS | DFS </span>
           <div style={{ float: "right", margin: "0" }}>
             <Image

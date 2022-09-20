@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import CloseButton from "react-bootstrap/CloseButton";
 import ListGroup from "react-bootstrap/ListGroup";
 import Ruler from "./ruler";
+import Offcanvas from "react-bootstrap/Offcanvas";
 
 async function requestJSON(type = "getEventByIndex", params = null) {
   let url = `/api/three/${type}?`;
@@ -18,6 +19,7 @@ function SidePanel({ allEvents }) {
   const [selectedEvent, setSelectedEvent] = useState("");
   const [selectedEventData, setSelectedEventData] = useState({});
   const [show, setShow] = useState(false);
+  const handleClose = () => setShow(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,93 +40,96 @@ function SidePanel({ allEvents }) {
   }, [allEvents]);
 
   return (
-    <div
-      id="sidePanel"
-      className="detailsPanel"
-      style={{ display: show ? "inline" : "none" }}
-    >
-      <ListGroup>
-        <label>
-          <CloseButton variant="white" onClick={() => setShow(false)} />
-          <select
-            name="events"
-            id="eventsDropDown"
-            onChange={(e) => {
-              console.log("event", e.target.value);
-              setSelectedEvent(e.target.value);
-            }}
-            value={selectedEvent}
-          >
-            {allEvents.map((event) => (
-              <option key={event.index} value={event.index}>
-                {parseFloat(event.anomalyScore).toFixed(3)} @ time:
-                {event.time}, Event[{event["index"]}]
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="customHeader">Anomalous Scale</div>
-        <div id="colorBarAnomalousScale"></div>
-        <div>
-          <p className="colorBarAxis">0.0</p>{" "}
-          <p className="colorBarAxis" style={{ marginLeft: "40%" }}>
-            0.5
-          </p>{" "}
-          <p className="colorBarAxis" style={{ marginLeft: "35%" }}>
-            1.0
-          </p>
-        </div>
-        <div className="customHeader underline">Attributes</div>
-        {["userPrincipalName", "time", "anomalyScore"].map((attr) => (
-          <ListGroup.Item
-            className="listOfAttributes"
-            variant="dark"
-            key={attr}
-          >
-            <span className="selectedEventTitle">
-              {attr.charAt(0).toUpperCase() + attr.slice(1)}:{" "}
-              <span
-                style={{
-                  color: attr == "anomalyScore" ? "#b95422" : "#f2f2f2",
-                }}
-              >
-                {attr == "anomalyScore"
-                  ? parseFloat(selectedEventData[attr]).toFixed(3)
-                  : selectedEventData[attr]}
+    <div style={{ display: show ? "inline" : "none" }}>
+      <Offcanvas
+        id="sidePanel"
+        show={show}
+        onHide={handleClose}
+        placement={"end"}
+      >
+        <ListGroup>
+          <label>
+            <CloseButton variant="white" onClick={() => setShow(false)} />
+            <select
+              name="events"
+              id="eventsDropDown"
+              onChange={(e) => {
+                console.log("event", e.target.value);
+                setSelectedEvent(e.target.value);
+              }}
+              value={selectedEvent}
+            >
+              {allEvents.map((event) => (
+                <option key={event.index} value={event.index}>
+                  {parseFloat(event.anomalyScore).toFixed(3)} @ time:
+                  {event.time}, Event[{event["index"]}]
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="customHeader">Anomalous Scale</div>
+          <div id="colorBarAnomalousScale"></div>
+          <div>
+            <p className="colorBarAxis">0.0</p>{" "}
+            <p className="colorBarAxis" style={{ marginLeft: "40%" }}>
+              0.5
+            </p>{" "}
+            <p className="colorBarAxis" style={{ marginLeft: "35%" }}>
+              1.0
+            </p>
+          </div>
+          <div className="customHeader underline">Attributes</div>
+          {["userPrincipalName", "time", "anomalyScore"].map((attr) => (
+            <ListGroup.Item
+              className="listOfAttributes"
+              variant="dark"
+              key={attr}
+            >
+              <span className="selectedEventTitle">
+                {attr.charAt(0).toUpperCase() + attr.slice(1)}:{" "}
+                <span
+                  style={{
+                    color: attr == "anomalyScore" ? "#b95422" : "#f2f2f2",
+                  }}
+                >
+                  {attr == "anomalyScore"
+                    ? parseFloat(selectedEventData[attr]).toFixed(3)
+                    : selectedEventData[attr]}
+                </span>
               </span>
-            </span>
-          </ListGroup.Item>
-        ))}
-        <br></br>
-        {[
-          "appDisplayName",
-          "appincrement",
-          "clientAppUsed",
-          "deviceDetailbrowser",
-          "locationcity",
-          "locationcountryOrRegion",
-        ].map((attr) => (
-          <ListGroup.Item
-            className="listOfAttributes"
-            variant="dark"
-            key={attr}
-          >
-            <span className="selectedEventTitle">
-              {attr}:{" "}
-              <span className="selectedEvent">
-                {attr == "anomalyScore"
-                  ? parseFloat(selectedEventData[attr]).toFixed(3)
-                  : selectedEventData[attr]}
+            </ListGroup.Item>
+          ))}
+          <br></br>
+          {[
+            "appDisplayName",
+            "appincrement",
+            "clientAppUsed",
+            "deviceDetailbrowser",
+            "locationcity",
+            "locationcountryOrRegion",
+          ].map((attr) => (
+            <ListGroup.Item
+              className="listOfAttributes"
+              variant="dark"
+              key={attr}
+            >
+              <span className="selectedEventTitle">
+                {attr}:{" "}
+                <span className="selectedEvent">
+                  {attr == "anomalyScore"
+                    ? parseFloat(selectedEventData[attr]).toFixed(3)
+                    : selectedEventData[attr]}
+                </span>
+                <Ruler
+                  mean={selectedEventData[attr + "_score_mean"]}
+                  score={selectedEventData[attr + "_score"]}
+                />
               </span>
-              <Ruler
-                mean={selectedEventData[attr + "_score_mean"]}
-                score={selectedEventData[attr + "_score"]}
-              />
-            </span>
-            <br></br>
-          </ListGroup.Item>
-        ))}
-      </ListGroup>
+              <br></br>
+            </ListGroup.Item>
+          ))}
+        </ListGroup>
+      </Offcanvas>
     </div>
   );
 }

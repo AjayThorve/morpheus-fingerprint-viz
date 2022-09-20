@@ -66,17 +66,28 @@ body {
   overflow-y: auto;
   width: 350px;
   height: 71vh;
+  background-color: #0f0f0f !important;
   padding: 19px;
   margin-top: 10px;
-  background-color: black !important;
   border-style: double;
   border-color: #333 !important;
-  opacity: 0.95;
-  float: right;
-  z-index: 100;
-  position: relative;
+  opacity: 0.9;
+  margin-top: 29vh;
 }
 
+#configPanel {
+  overflow-y: auto;
+  width: 350px;
+  height: 94vh;
+  background-color: #0f0f0f !important;
+  margin-left: 0;
+  /* padding: 19px; */
+  color: white;
+  border-style: double;
+  border-color: #333 !important;
+  /* opacity: 0.8; */
+  margin-top: 6vh;
+}
 .partition {
   border: none;
   border-top: 3px double #f2f2f2;
