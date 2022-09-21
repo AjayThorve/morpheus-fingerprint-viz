@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import CloseButton from "react-bootstrap/CloseButton";
 import ListGroup from "react-bootstrap/ListGroup";
-import Ruler from "./ruler";
+import Ruler from "../ruler";
 import Offcanvas from "react-bootstrap/Offcanvas";
+import styles from "../../styles/components/sidePanels.module.css";
 
 async function requestJSON(type = "getEventByIndex", params = null) {
   let url = `/api/three/${type}?`;
@@ -42,7 +43,7 @@ function SidePanel({ allEvents }) {
   return (
     <div style={{ display: show ? "inline" : "none" }}>
       <Offcanvas
-        id="sidePanel"
+        id={styles.infoPanel}
         show={show}
         onHide={handleClose}
         placement={"end"}
@@ -52,7 +53,7 @@ function SidePanel({ allEvents }) {
             <CloseButton variant="white" onClick={() => setShow(false)} />
             <select
               name="events"
-              id="eventsDropDown"
+              id={styles.eventsDropDown}
               onChange={(e) => {
                 console.log("event", e.target.value);
                 setSelectedEvent(e.target.value);
@@ -67,25 +68,27 @@ function SidePanel({ allEvents }) {
               ))}
             </select>
           </label>
-          <div className="customHeader">Anomalous Scale</div>
-          <div id="colorBarAnomalousScale"></div>
+          <div className={styles.customHeader}>Anomalous Scale</div>
+          <div id={styles.colorBarAnomalousScale}></div>
           <div>
-            <p className="colorBarAxis">0.0</p>{" "}
-            <p className="colorBarAxis" style={{ marginLeft: "40%" }}>
+            <p className={styles.colorBarAxis}>0.0</p>{" "}
+            <p className={styles.colorBarAxis} style={{ marginLeft: "40%" }}>
               0.5
             </p>{" "}
-            <p className="colorBarAxis" style={{ marginLeft: "35%" }}>
+            <p className={styles.colorBarAxis} style={{ marginLeft: "35%" }}>
               1.0
             </p>
           </div>
-          <div className="customHeader underline">Attributes</div>
+          <div className={`${styles.customHeader} ${styles.underline}`}>
+            Attributes
+          </div>
           {["userPrincipalName", "time", "anomalyScore"].map((attr) => (
             <ListGroup.Item
-              className="listOfAttributes"
+              className={styles.listOfAttributes}
               variant="dark"
               key={attr}
             >
-              <span className="selectedEventTitle">
+              <span className={styles.selectedEventTitle}>
                 {attr.charAt(0).toUpperCase() + attr.slice(1)}:{" "}
                 <span
                   style={{
@@ -109,13 +112,13 @@ function SidePanel({ allEvents }) {
             "locationcountryOrRegion",
           ].map((attr) => (
             <ListGroup.Item
-              className="listOfAttributes"
+              className={styles.listOfAttributes}
               variant="dark"
               key={attr}
             >
-              <span className="selectedEventTitle">
+              <span className={styles.selectedEventTitle}>
                 {attr}:{" "}
-                <span className="selectedEvent">
+                <span className={styles.selectedEvent}>
                   {attr == "anomalyScore"
                     ? parseFloat(selectedEventData[attr]).toFixed(3)
                     : selectedEventData[attr]}

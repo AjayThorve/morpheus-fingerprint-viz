@@ -4,8 +4,9 @@ import { tableFromIPC } from "apache-arrow";
 import Image from "next/image";
 import HexGrid3d from "../components/hexgrid-3d";
 import AreaChart from "../components/area";
-import SidePanel from "../components/sidePanel";
-import ConfigPanel from "../components/leftConfigPanel";
+import SidePanel from "../components/sidePanels/rightInfoPanel";
+import ConfigPanel from "../components/sidePanels/leftConfigPanel";
+import styles from "../styles/DFS-3d.module.css";
 
 async function requestJSON(type = "getEventStats", params = null) {
   let url = `/api/three/${type}?`;
@@ -128,9 +129,9 @@ export default class CustomD3 extends React.Component {
   render() {
     return (
       <div id="chart">
-        <div className="topnav">
+        <div className={styles.topnav}>
           <ConfigPanel />
-          <span> MORPHEUS | DFS </span>
+          <span> MORPHEUS | Digital Fingerprint </span>
           <div style={{ float: "right", margin: "0" }}>
             <Image
               alt="nv_logo"
@@ -139,15 +140,14 @@ export default class CustomD3 extends React.Component {
               width={100}
             ></Image>
           </div>
-          {/* <button id="play-button" className="active" onClick={}>Play</button> */}
         </div>
-        <div id="area">
+        <div id={styles.area}>
           <AreaChart
             totalEvents={this.state.totalEvents}
             anomalousEvents={this.state.anomalousEvents}
           />
         </div>
-        <div id="hexgrid">
+        <div id={styles.hexgrid}>
           <HexGrid3d
             rows={34}
             cols={48}

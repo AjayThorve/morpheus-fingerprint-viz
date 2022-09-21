@@ -21,7 +21,7 @@ function AreaChart({ totalEvents, anomalousEvents }) {
       text: "Total Network Traffic Volume",
       textStyle: {
         color: "#ffffff",
-        fontSize: "18px",
+        fontSize: "14px",
       },
       top: "5%",
       left: "2%",
@@ -60,7 +60,6 @@ function AreaChart({ totalEvents, anomalousEvents }) {
       textStyle: {
         color: "#ffffff",
       },
-      // splitLine: { interval: 2 },
       axisLabel: { color: "#ffffff", margin: 15 },
       inverse: true,
     },

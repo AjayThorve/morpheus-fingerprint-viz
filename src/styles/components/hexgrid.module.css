@@ -1,0 +1,10 @@
+#hexgridCanvas {
+  /* margin-top: 200px; */
+  background: rgb(15, 15, 15) !important;
+}
+
+#hexBox {
+  width: 100vw;
+  height: 100vh;
+  position: absolute;
+}

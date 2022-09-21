@@ -1,0 +1,35 @@
+.ruler {
+  margin: 0px 5px -5px 0px;
+  display: flex;
+}
+.ruler .rulerRule {
+  border-left: solid 0px;
+  border-bottom: solid 1px;
+  display: flex;
+  flex-grow: 1;
+  flex-shrink: 1;
+  padding: 5px 0px;
+}
+
+.rulerRule:nth-child(10n) {
+  border-left: solid 1px;
+}
+
+.rulerRule:first-child {
+  border-left: solid 1px;
+}
+
+.ruler .rulerRule:last-child {
+  border-right: solid 0px;
+  border-bottom: solid 0px;
+}
+
+.rulerBG {
+  background-color: white;
+}
+
+.rulerLabel {
+  margin-top: 5px;
+  font-size: 13px;
+  color: #f2f2f2;
+}

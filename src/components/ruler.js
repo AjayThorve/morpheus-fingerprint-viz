@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import styles from "../styles/components/ruler.module.css";
 
 function Ruler({ mean, score }) {
   const min = Math.min(mean, score);
@@ -6,33 +7,30 @@ function Ruler({ mean, score }) {
   return (
     <div>
       <span
+        className={styles.rulerLabel}
         style={{
           marginLeft: `${score * 100}%`,
-          fontSize: 13,
-          color: "#f2f2f2",
         }}
       >
         Score({parseFloat(score).toFixed(2)})
       </span>
 
-      <div className="ruler">
+      <div className={styles.ruler}>
         {[...Array(100)].map((e, i) => (
           <div
             key={i}
             className={
               i / 100 >= min && i / 100 <= max
-                ? "ruler-rule ruler-bg"
-                : "ruler-rule"
+                ? `${styles.rulerRule} ${styles.rulerBG}`
+                : styles.rulerRule
             }
           ></div>
         ))}
       </div>
       <div
+        className={styles.rulerLabel}
         style={{
-          marginTop: 5,
           marginLeft: `${mean * 100}%`,
-          fontSize: 13,
-          color: "#f2f2f2",
         }}
       >
         Mean({parseFloat(mean).toFixed(2)})

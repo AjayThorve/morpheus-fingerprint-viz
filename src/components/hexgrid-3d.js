@@ -1,13 +1,10 @@
 import React, { useEffect } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import {
-  OrthographicCamera,
-  MapControls,
-  OrbitControls,
-} from "@react-three/drei";
+import { OrthographicCamera, MapControls } from "@react-three/drei";
 import { acceleratedRaycast } from "three-mesh-bvh";
-import { Stats, Text } from "@react-three/drei";
+import { Text } from "@react-three/drei";
+import styles from "../styles/components/hexgrid.module.css";
 
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
@@ -265,8 +262,8 @@ export default class HexGrid3d extends React.Component {
   }
   render() {
     return (
-      <div id="HexBox">
-        <Canvas id="xyz" linear={true}>
+      <div id={styles.hexBox}>
+        <Canvas id={styles.hexgridCanvas} linear={true}>
           <color attach="background" args={["#000"]} />
           <ambientLight color={0xffffff} />
           <directionalLight position={[300, 200, 1]} color={0xffffff} />
@@ -300,7 +297,6 @@ export default class HexGrid3d extends React.Component {
             position={[0, 1800, 4]}
             args={this.state.args}
           />
-          {/* <Stats/> */}
         </Canvas>
       </div>
     );

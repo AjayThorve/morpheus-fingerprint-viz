@@ -1,0 +1,37 @@
+#hexgrid {
+  width: 100vw;
+  height: 80vh;
+  top: 30vh;
+}
+
+#area {
+  width: 100vw;
+  height: 22vh;
+}
+
+.partition {
+  border: none;
+  border-top: 3px double #f2f2f2;
+  color: #0f0f0f;
+  overflow: visible;
+  text-align: center;
+  height: 5px;
+}
+
+.topnav {
+  background-color: #1e1e1e;
+  overflow: hidden;
+  border-top-color: #76b900;
+  border-top-style: solid;
+}
+
+.topnav span,
+.topnav a {
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
+}
