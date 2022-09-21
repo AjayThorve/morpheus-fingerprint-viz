@@ -26,7 +26,7 @@ const railStyle = {
   height: 10,
 };
 
-function ConfigPanel() {
+function ConfigPanel({ config, updateConfig }) {
   const [show, setShow] = useState(false);
 
   const handleClose = () => setShow(false);
@@ -50,14 +50,15 @@ function ConfigPanel() {
             <select
               name="sortEvents"
               className={styles.configTools}
+              value={config.sortBy}
               onChange={(e) => {
                 console.log("event", e.target.value);
                 // setSelectedEvent(e.target.value);
               }}
             >
-              <option>Average Anomalous Score</option>
-              <option>Sum of Anomalous Score</option>
-              <option>No Sorting</option>
+              <option value={"avgAnomalous"}>Average Anomalous Score</option>
+              <option value={"sumAnomalous"}>Sum of Anomalous Score</option>
+              <option value={"none"}>No Sorting</option>
             </select>
           </ListGroup.Item>
           <br></br>
@@ -71,7 +72,7 @@ function ConfigPanel() {
               range
               min={0}
               max={100}
-              defaultValue={[20, 38.5]}
+              defaultValue={config.anomalousColorThreshold.map((x) => x * 100)}
               onChange={(e) => console.log(e)}
               handleStyle={[handleStyle, handleStyle]}
               trackStyle={trackStyle}
@@ -169,14 +170,26 @@ function ConfigPanel() {
             key={"pauseLiveUpdates"}
           >
             <div className={styles.configTitle}>Pause Live Updates</div>
-            <Form.Switch className={`${styles.configSwitch} configSwitch`} />
+            <Form.Switch
+              className={`${styles.configSwitch} configSwitch`}
+              checked={config.pauseLiveUpdates}
+              onChange={(e) => {
+                updateConfig("pauseLiveUpdates", e.target.checked);
+              }}
+            />
           </ListGroup.Item>
           <ListGroup.Item
             className={styles.listOfAttributes}
             key={"3dPerspectiveLock"}
           >
             <div className={styles.configTitle}>3d Perspective Lock</div>
-            <Form.Switch className={`${styles.configSwitch} configSwitch`} />
+            <Form.Switch
+              className={`${styles.configSwitch} configSwitch`}
+              checked={config.threeDimensionPerspectiveLock}
+              onChange={(e) => {
+                updateConfig("threeDimensionPerspectiveLock", e.target.checked);
+              }}
+            />
           </ListGroup.Item>
         </ListGroup>
       </Offcanvas>

@@ -290,6 +290,10 @@ export default class HexGrid3d extends React.Component {
             minDistance={0}
             maxDistance={5000}
             maxPolarAngle={Math.PI / 2}
+            minAzimuthAngle={
+              this.props.threeDimensionPerspectiveLock ? 0 : Math.PI / 2
+            }
+            maxAzimuthAngle={0}
           />
           <OrthographicCamera
             makeDefault

@@ -46,6 +46,7 @@ export default class CustomD3 extends React.Component {
     this.tooltipRef = React.createRef();
     this.legendRef = React.createRef();
     this.resetSelected = this.resetSelected.bind(this);
+    this.updateAppSettings = this.updateAppSettings.bind(this);
     this.setEvents = this.setEvents.bind(this);
     this.setSelectedEvent = this.setSelectedEvent.bind(this);
     this.offsetX = 200;
@@ -63,6 +64,12 @@ export default class CustomD3 extends React.Component {
       sort: true,
       totalEvents: [],
       anomalousEvents: [],
+      AppSettings: {
+        sortBy: "sumAnomalous",
+        anomalousColorThreshold: [0.1, 0.385],
+        pauseLiveUpdates: false,
+        threeDimensionPerspectiveLock: true,
+      },
     };
     this.waitTime = 1000;
   }
@@ -126,11 +133,26 @@ export default class CustomD3 extends React.Component {
     });
   }
 
+  updateAppSettings(key, value) {
+    console.log(key, value);
+    console.log(this.state.AppSettings);
+
+    this.setState({
+      AppSettings: {
+        ...this.state.AppSettings,
+        [key]: value,
+      },
+    });
+  }
+
   render() {
     return (
       <div id="chart">
         <div className={styles.topnav}>
-          <ConfigPanel />
+          <ConfigPanel
+            config={this.state.AppSettings}
+            updateConfig={this.updateAppSettings}
+          />
           <span> MORPHEUS | Digital Fingerprint </span>
           <div style={{ float: "right", margin: "0" }}>
             <Image
@@ -160,6 +182,9 @@ export default class CustomD3 extends React.Component {
             setEvents={this.setEvents}
             setSelectedEvent={this.setSelectedEvent}
             resetSelected={this.resetSelected}
+            threeDimensionPerspectiveLock={
+              this.state.AppSettings.threeDimensionPerspectiveLock
+            }
           />
 
           <SidePanel

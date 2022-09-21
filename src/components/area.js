@@ -42,6 +42,7 @@ function AreaChart({ totalEvents, anomalousEvents }) {
         color: "#ffffff",
         fontSize: "14px",
       },
+      itemGap: 40,
       bottom: "5%",
       left: "5%",
     },
