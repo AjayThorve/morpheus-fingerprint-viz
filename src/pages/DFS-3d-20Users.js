@@ -135,9 +135,9 @@ export default class CustomD3 extends React.Component {
           <div style={{ float: "right", margin: "0" }}>
             <Image
               alt="nv_logo"
-              src="/nvLogo.png"
+              src="/nvidia-logo-final.png"
               height={50}
-              width={100}
+              width={75}
             ></Image>
           </div>
         </div>

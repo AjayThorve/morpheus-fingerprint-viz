@@ -48,9 +48,13 @@ function SidePanel({ allEvents }) {
         onHide={handleClose}
         placement={"end"}
       >
-        <ListGroup>
+        <Offcanvas.Header>
+          <Offcanvas.Title>Event Details</Offcanvas.Title>
+          <CloseButton variant="white" onClick={() => setShow(false)} />
+        </Offcanvas.Header>
+        <ListGroup id={styles.infoPanelBody}>
           <label>
-            <CloseButton variant="white" onClick={() => setShow(false)} />
+            <div className={styles.customHeader}>Selected Events</div>
             <select
               name="events"
               id={styles.eventsDropDown}

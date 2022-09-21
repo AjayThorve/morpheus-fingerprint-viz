@@ -1,0 +1,17 @@
+.configSwitch .form-check-input {
+  background-color: black !important;
+  border-color: gray !important;
+  width: 35px !important;
+  background-image: url("data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%27-4 -4 8 8%27><circle r='4' fill='rgba(255,255,255,1)'/></svg>") !important;
+}
+.configSwitch .form-check-input:checked {
+  background-color: gray !important;
+  border-color: gray !important;
+  background-image: url("data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%27-4 -4 8 8%27><circle r='4' fill=%27%23fff%27/></svg>") !important;
+}
+
+.configSwitch .form-check-input:focus {
+  border-color: white !important;
+  /* outline: 0; */
+  box-shadow: none !important;
+}
