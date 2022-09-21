@@ -317,8 +317,10 @@ function getInstances(instanceID, df, sort = false) {
     .get("userID")
     .eq(userID)
     .logicalAnd(data.get("time").eq(time));
-  print(data.filter(resultMask).head(2));
-  return data.filter(resultMask).select(["time", "index", "anomalyScore"]);
+  return data
+    .filter(resultMask)
+    .select(["time", "index", "anomalyScore"])
+    .sortValues({ anomalyScore: { ascending: false } });
 }
 
 function generateData(df, type = "elevation", sort = false) {
