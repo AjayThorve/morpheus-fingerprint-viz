@@ -64,27 +64,24 @@
 #configPanel {
   overflow-y: auto;
   width: 340px;
-  height: 94vh;
+  height: 95vh;
   background-color: #0f0f0f !important;
+  box-shadow: 1px 1px 0f0f0f;
   margin-left: 0;
-  /* padding: 19px; */
   color: white;
-  border-style: double;
-  border-color: #333 !important;
-  /* opacity: 0.8; */
+  border-style: none;
   margin-top: 6vh;
 }
 
 #infoPanel {
   overflow-y: auto;
   width: 350px;
-  height: 71vh;
+  height: 72vh;
   background-color: #0f0f0f !important;
-  border-style: double;
+  box-shadow: 1px 1px 0f0f0f;
   color: white;
-  border-color: #333 !important;
   opacity: 0.9;
-  margin-top: 29vh;
+  margin-top: 28vh;
 }
 
 #infoPanelBody {
