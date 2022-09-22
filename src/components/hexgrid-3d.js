@@ -107,7 +107,9 @@ class HexGrid extends React.Component {
             console.log(id);
             const result = await requestJSON(
               "getInstances",
-              `time=${this.props.currentTime}&id=${id}&sort=true`
+              `time=${this.props.currentTime}&id=${id}&sort=${
+                this.props.sortBy != "none"
+              }`
             );
             this.props.setEvents(result["result"]);
           }}
@@ -283,6 +285,7 @@ export default class HexGrid3d extends React.Component {
             setEvents={this.props.setEvents}
             setSelectedEvent={this.props.setSelectedEvent}
             resetSelected={this.props.resetSelected}
+            sortBy={this.props.sortBy}
           />
           <MapControls
             makeDefault

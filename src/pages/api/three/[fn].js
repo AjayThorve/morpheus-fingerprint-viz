@@ -377,7 +377,7 @@ function generateData(df, type = "elevation", sort = false) {
       .cast(new Int32());
 
     if (type == "elevation") {
-      const elevation = sortedResults.get("elevation").replaceNulls(0).div(t);
+      const elevation = sortedResults.get("elevation").replaceNulls(-1).div(t);
       tempData = tempData.assign({
         elevation: tempData.get("elevation").scatter(elevation, gridIndex),
         userID: tempData

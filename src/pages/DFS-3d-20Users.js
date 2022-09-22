@@ -81,19 +81,19 @@ export default class CustomD3 extends React.Component {
     for (let i = 90; i <= totalTime; i += 1) {
       const data = await requestJSON(
         "getEventStats",
-        `time=${i}&sort=${this.state.sort}`
+        `time=${i}&sort=${this.state.AppSettings.sortBy != "none"}`
       );
       const elevation = await requestData(
         "getDFElevation",
-        `time=${i}&sort=${this.state.sort}`
+        `time=${i}&sort=${this.state.AppSettings.sortBy != "none"}`
       );
       const colors = await requestData(
         "getDFColors",
-        `time=${i}&sort=${this.state.sort}`
+        `time=${i}&sort=${this.state.AppSettings.sortBy != "none"}`
       );
       const userIDs = await requestData(
         "getUniqueIDs",
-        `time=${i}&sort=${this.state.sort}`
+        `time=${i}&sort=${this.state.AppSettings.sortBy != "none"}`
       );
       const timeNow = +new Date();
 
@@ -110,6 +110,10 @@ export default class CustomD3 extends React.Component {
         ]),
       });
       await timeout(this.waitTime); //for 5 sec delay
+      // temporary hack, infinite loop
+      if (i == totalTime) {
+        i = 90;
+      }
     }
   }
 
@@ -185,6 +189,7 @@ export default class CustomD3 extends React.Component {
             threeDimensionPerspectiveLock={
               this.state.AppSettings.threeDimensionPerspectiveLock
             }
+            sortBy={this.state.AppSettings.sortBy}
           />
 
           <SidePanel

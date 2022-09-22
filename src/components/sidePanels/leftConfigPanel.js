@@ -52,8 +52,7 @@ function ConfigPanel({ config, updateConfig }) {
               className={styles.configTools}
               value={config.sortBy}
               onChange={(e) => {
-                console.log("event", e.target.value);
-                // setSelectedEvent(e.target.value);
+                updateConfig("sortBy", e.target.value);
               }}
             >
               <option value={"avgAnomalous"}>Average Anomalous Score</option>
