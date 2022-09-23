@@ -65,7 +65,7 @@ export default class CustomD3 extends React.Component {
       totalEvents: [],
       anomalousEvents: [],
       AppSettings: {
-        sortBy: "sumAnomalous",
+        sortBy: "none",
         anomalousColorThreshold: [0.1, 0.385],
         pauseLiveUpdates: false,
         threeDimensionPerspectiveLock: true,
