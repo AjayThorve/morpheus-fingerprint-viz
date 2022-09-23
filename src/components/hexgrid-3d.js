@@ -246,6 +246,7 @@ export default class HexGrid3d extends React.Component {
   constructor(props) {
     super(props);
     this.controlsRef = React.createRef(null);
+    this.cameraRef = React.createRef(null);
     this.resetControls = this.resetControls.bind(this);
     this.state = {
       args: [0, 0, 0, 0, 0, 0],
@@ -254,9 +255,8 @@ export default class HexGrid3d extends React.Component {
     this.hexRef = React.createRef(null);
   }
   resetControls() {
-    if (this.controlsRef) {
-      this.controlsRef.current.reset();
-    }
+    this.controlsRef && this.controlsRef.current.reset();
+    this.cameraRef && (this.cameraRef.current.zoom = 1);
   }
   componentDidUpdate(prevProps, prevState) {
     if (
@@ -323,6 +323,7 @@ export default class HexGrid3d extends React.Component {
           />
           <OrthographicCamera
             makeDefault
+            ref={this.cameraRef}
             zoom={1}
             position={this.state.cameraPostion}
             args={this.state.args}
