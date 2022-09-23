@@ -245,11 +245,29 @@ class HexGrid extends React.Component {
 export default class HexGrid3d extends React.Component {
   constructor(props) {
     super(props);
+    this.controlsRef = React.createRef(null);
+    this.resetControls = this.resetControls.bind(this);
     this.state = {
       args: [0, 0, 0, 0, 0, 0],
+      cameraPostion: [0, 500, 4],
     };
     this.hexRef = React.createRef(null);
   }
+  resetControls() {
+    if (this.controlsRef) {
+      this.controlsRef.current.reset();
+    }
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (
+      prevProps.threeDimensionPerspectiveLock !==
+        this.props.threeDimensionPerspectiveLock &&
+      this.props.threeDimensionPerspectiveLock == true
+    ) {
+      this.resetControls();
+    }
+  }
+
   async componentDidMount() {
     this.setState({
       args: [
@@ -265,7 +283,11 @@ export default class HexGrid3d extends React.Component {
   render() {
     return (
       <div id={styles.hexBox}>
-        <Canvas id={styles.hexgridCanvas} linear={true}>
+        <Canvas
+          id={styles.hexgridCanvas}
+          linear={true}
+          onDoubleClick={this.resetControls}
+        >
           <color attach="background" args={["#000"]} />
           <ambientLight color={0xffffff} />
           <directionalLight position={[300, 200, 1]} color={0xffffff} />
@@ -290,6 +312,7 @@ export default class HexGrid3d extends React.Component {
           <MapControls
             makeDefault
             screenSpacePanning={true}
+            ref={this.controlsRef}
             minDistance={0}
             maxDistance={5000}
             maxPolarAngle={Math.PI / 2}
@@ -301,7 +324,7 @@ export default class HexGrid3d extends React.Component {
           <OrthographicCamera
             makeDefault
             zoom={1}
-            position={[0, 1800, 4]}
+            position={this.state.cameraPostion}
             args={this.state.args}
           />
         </Canvas>
