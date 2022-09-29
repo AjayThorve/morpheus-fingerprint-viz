@@ -56,6 +56,7 @@ export default class CustomD3 extends React.Component {
     this.hexgridHeight = this.hexRadius * 50;
     this.state = {
       selectedEvent: {},
+      selectedInstance: -1,
       allEvents: [],
       currentTime: 0,
       position: null,
@@ -109,6 +110,11 @@ export default class CustomD3 extends React.Component {
           [timeNow, data.totalEvents],
         ]),
       });
+      if (this.state.selectedEvent !== -1) {
+        this.setSelectedEvent(
+          this.state.selectedEvent + this.state.userIDs.numRows
+        );
+      }
       await timeout(this.waitTime); //for 5 sec delay
       // temporary hack, infinite loop
       if (i == totalTime) {
@@ -118,11 +124,9 @@ export default class CustomD3 extends React.Component {
   }
 
   resetSelected() {
-    if (this.state.selectedEvent !== {}) {
-      this.setState({
-        selectedEvent: {},
-      });
-    }
+    this.setState({
+      selectedEvent: -1,
+    });
   }
 
   setEvents(events) {
@@ -185,6 +189,7 @@ export default class CustomD3 extends React.Component {
             userIDs={this.state.userIDs}
             setEvents={this.setEvents}
             setSelectedEvent={this.setSelectedEvent}
+            selectedEvent={this.state.selectedEvent}
             resetSelected={this.resetSelected}
             threeDimensionPerspectiveLock={
               this.state.AppSettings.threeDimensionPerspectiveLock
@@ -192,10 +197,7 @@ export default class CustomD3 extends React.Component {
             sortBy={this.state.AppSettings.sortBy}
           />
 
-          <SidePanel
-            selectedEvent={this.state.selectedEvent}
-            allEvents={this.state.allEvents}
-          ></SidePanel>
+          <SidePanel allEvents={this.state.allEvents}></SidePanel>
         </div>
       </div>
     );

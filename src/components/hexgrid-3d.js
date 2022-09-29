@@ -47,6 +47,31 @@ class HexGrid extends React.Component {
             this.props.userIDs.batches[0].data.children[0].values
           ),
         });
+        console.log(this.props.selectedEvent);
+        if (this.props.selectedEvent != -1) {
+          const positionsTemp = new Float32Array(this.state.position);
+          positionsTemp[this.props.selectedEvent * 16 + 0] = 0.7;
+          positionsTemp[this.props.selectedEvent * 16 + 10] = 0.7;
+
+          this.myMesh.current.instanceMatrix =
+            new THREE.InstancedBufferAttribute(positionsTemp, 16);
+        } else {
+          this.myMesh.current.instanceMatrix =
+            new THREE.InstancedBufferAttribute(this.state.position, 16);
+        }
+      }
+    }
+    if (prevProps.selectedEvent !== this.props.selectedEvent) {
+      if (this.props.selectedEvent != -1) {
+        const positionsTemp = new Float32Array(this.state.position);
+        positionsTemp[this.props.selectedEvent * 16 + 0] = 0.7;
+        positionsTemp[this.props.selectedEvent * 16 + 10] = 0.7;
+
+        this.myMesh.current.instanceMatrix = new THREE.InstancedBufferAttribute(
+          positionsTemp,
+          16
+        );
+      } else {
         this.myMesh.current.instanceMatrix = new THREE.InstancedBufferAttribute(
           this.state.position,
           16
@@ -104,6 +129,8 @@ class HexGrid extends React.Component {
           onClick={async (e) => {
             e.stopPropagation();
             const id = e.instanceId;
+            this.props.setSelectedEvent(id);
+
             console.log(id);
             const result = await requestJSON(
               "getInstances",
@@ -257,6 +284,7 @@ export default class HexGrid3d extends React.Component {
   resetControls() {
     this.controlsRef && this.controlsRef.current.reset();
     this.cameraRef && (this.cameraRef.current.zoom = 1);
+    this.props.resetSelected();
   }
   componentDidUpdate(prevProps, prevState) {
     if (
@@ -306,6 +334,7 @@ export default class HexGrid3d extends React.Component {
             userIDs={this.props.userIDs}
             setEvents={this.props.setEvents}
             setSelectedEvent={this.props.setSelectedEvent}
+            selectedEvent={this.props.selectedEvent}
             resetSelected={this.props.resetSelected}
             sortBy={this.props.sortBy}
           />

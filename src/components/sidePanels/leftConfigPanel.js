@@ -76,6 +76,10 @@ function ConfigPanel({ config, updateConfig }) {
               handleStyle={[handleStyle, handleStyle]}
               trackStyle={trackStyle}
               railStyle={railStyle}
+              marks={{
+                0: 0,
+                100: 100,
+              }}
             />
           </ListGroup.Item>
           <br></br>
