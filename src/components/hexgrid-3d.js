@@ -111,46 +111,26 @@ class HexGrid extends React.Component {
           onPointerOver={(e) => {
             e.stopPropagation();
             document.body.style.cursor = "pointer";
-            const id = e.instanceId;
-            // const colorsTemp = this.state.colors;
-            // colorsTemp[id * 3] *= 1.5;
-            // colorsTemp[id * 3 + 1] *= 1.5;
-            // colorsTemp[id * 3 + 2] *= 1.5;
-            // this.setState({
-            //   colors: new Float32Array(colorsTemp),
-            // });
-
-            // const positionsTemp = this.state.position;
-            // positionsTemp[id * 16 + 5] *= 1.1;
-            // positionsTemp[id * 16 + 4] += 2;
-            // this.myMesh.current.instanceMatrix =
-            //   new THREE.InstancedBufferAttribute(positionsTemp, 16);
-          }}
-          onClick={async (e) => {
-            e.stopPropagation();
-            const id = e.instanceId;
-            this.props.setSelectedEvent(id);
-
-            console.log(id);
-            const result = await requestJSON(
-              "getInstances",
-              `time=${this.props.currentTime}&id=${id}&sort=${
-                this.props.sortBy != "none"
-              }`
-            );
-            this.props.setEvents(result["result"]);
           }}
           onPointerLeave={(e) => {
             e.stopPropagation();
             document.body.style.cursor = "default";
-            // this.setState({
-            //   colors: new Float32Array(this.props.colors),
-            // });
-            // const positionsTemp = this.state.position;
-            // positionsTemp[e.instanceId * 16 + 5] /= 1.1;
-            // positionsTemp[e.instanceId * 16 + 4] -= 2;
-            // this.myMesh.current.instanceMatrix =
-            //   new THREE.InstancedBufferAttribute(positionsTemp, 16);
+          }}
+          onClick={async (e) => {
+            e.stopPropagation();
+            const id = e.instanceId;
+            if (id !== this.props.selectedEvent) {
+              this.props.setSelectedEvent(id);
+              const result = await requestJSON(
+                "getInstances",
+                `time=${this.props.currentTime}&id=${id}&sort=${
+                  this.props.sortBy != "none"
+                }`
+              );
+              this.props.setEvents(result["result"]);
+            } else {
+              this.props.setSelectedEvent(-1);
+            }
           }}
         >
           <cylinderGeometry

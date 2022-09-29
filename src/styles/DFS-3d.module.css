@@ -25,6 +25,22 @@
   border-top-style: solid;
 }
 
+.bottomnav {
+  background-color: #1e1e1e;
+  overflow: hidden;
+  height: 25px;
+  border-top-color: #76b900;
+  border-top-style: solid;
+  /* 
+  border-bottom-color: #76b900;
+  border-bottom-style: solid; */
+}
+.bottomnav {
+  color: white;
+  padding: 10px;
+  justify-content: flex-end;
+}
+
 .topnav span,
 .topnav a {
   float: left;

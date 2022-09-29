@@ -41,6 +41,10 @@
   font-weight: bold;
 }
 
+.configSwitch label {
+  color: white;
+}
+
 .configSliders {
   background-color: #0f0f0f;
   width: 88% !important;
@@ -49,7 +53,7 @@
 
 .configSwitch {
   background-color: #0f0f0f;
-  width: 88% !important;
+  width: 10% !important;
   margin-left: 5% !important;
   border: none;
 }

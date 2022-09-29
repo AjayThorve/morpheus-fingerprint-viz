@@ -28,6 +28,14 @@ const railStyle = {
 
 function ConfigPanel({ config, updateConfig }) {
   const [show, setShow] = useState(false);
+  const [configValues, setConfigValues] = useState({
+    colorThreshold: config.anomalousColorThreshold.map((x) => x * 100),
+    visibleUsers: [25000],
+    sortFrequency: [1], //seconds
+    updateFrequency: [1], //seconds
+    timePerHex: [2], //seconds
+    lookBackTime: [600], //seconds
+  });
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
@@ -71,14 +79,26 @@ function ConfigPanel({ config, updateConfig }) {
               range
               min={0}
               max={100}
-              defaultValue={config.anomalousColorThreshold.map((x) => x * 100)}
-              onChange={(e) => console.log(e)}
+              defaultValue={configValues.colorThreshold}
+              onChange={(e) => {
+                setConfigValues({ ...configValues, colorThreshold: e });
+              }}
               handleStyle={[handleStyle, handleStyle]}
               trackStyle={trackStyle}
               railStyle={railStyle}
               marks={{
-                0: 0,
-                100: 100,
+                [configValues.colorThreshold[0]]: {
+                  style: {
+                    color: "white",
+                  },
+                  label: <span>{configValues.colorThreshold[0] / 100}</span>,
+                },
+                [configValues.colorThreshold[1]]: {
+                  style: {
+                    color: "white",
+                  },
+                  label: <span>{configValues.colorThreshold[1] / 100}</span>,
+                },
               }}
             />
           </ListGroup.Item>
@@ -92,11 +112,21 @@ function ConfigPanel({ config, updateConfig }) {
               className={`${styles.configSliders}`}
               min={30}
               max={50000}
-              defaultValue={[25000]}
-              onChange={(e) => console.log(e)}
+              defaultValue={configValues.visibleUsers}
+              onChange={(e) =>
+                setConfigValues({ ...configValues, visibleUsers: e })
+              }
               handleStyle={handleStyle}
               trackStyle={trackStyle}
               railStyle={railStyle}
+              marks={{
+                [configValues.visibleUsers]: {
+                  style: {
+                    color: "white",
+                  },
+                  label: <span>{configValues.visibleUsers}</span>,
+                },
+              }}
             />
           </ListGroup.Item>
           <br></br>
@@ -109,11 +139,21 @@ function ConfigPanel({ config, updateConfig }) {
               className={`${styles.configSliders}`}
               min={0}
               max={60}
-              defaultValue={[1]}
-              onChange={(e) => console.log(e)}
+              defaultValue={configValues.sortFrequency}
+              onChange={(e) =>
+                setConfigValues({ ...configValues, sortFrequency: e })
+              }
               handleStyle={handleStyle}
               trackStyle={trackStyle}
               railStyle={railStyle}
+              marks={{
+                [configValues.sortFrequency]: {
+                  style: {
+                    color: "white",
+                  },
+                  label: <span>{configValues.sortFrequency} sec</span>,
+                },
+              }}
             />
           </ListGroup.Item>
           <br></br>
@@ -126,11 +166,21 @@ function ConfigPanel({ config, updateConfig }) {
               className={`${styles.configSliders}`}
               min={0}
               max={300}
-              defaultValue={[1]}
-              onChange={(e) => console.log(e)}
+              defaultValue={configValues.updateFrequency}
+              onChange={(e) =>
+                setConfigValues({ ...configValues, updateFrequency: e })
+              }
               handleStyle={handleStyle}
               trackStyle={trackStyle}
               railStyle={railStyle}
+              marks={{
+                [configValues.updateFrequency]: {
+                  style: {
+                    color: "white",
+                  },
+                  label: <span>{configValues.updateFrequency} sec</span>,
+                },
+              }}
             />
           </ListGroup.Item>
           <br></br>
@@ -143,11 +193,21 @@ function ConfigPanel({ config, updateConfig }) {
               className={`${styles.configSliders}`}
               min={1}
               max={100}
-              defaultValue={[5]}
-              onChange={(e) => console.log(e)}
+              defaultValue={configValues.timePerHex}
+              onChange={(e) =>
+                setConfigValues({ ...configValues, timePerHex: e })
+              }
               handleStyle={handleStyle}
               trackStyle={trackStyle}
               railStyle={railStyle}
+              marks={{
+                [configValues.timePerHex]: {
+                  style: {
+                    color: "white",
+                  },
+                  label: <span>{configValues.timePerHex} sec</span>,
+                },
+              }}
             />
           </ListGroup.Item>
           <br></br>
@@ -160,11 +220,21 @@ function ConfigPanel({ config, updateConfig }) {
               className={`${styles.configSliders}`}
               min={0}
               max={1000}
-              defaultValue={[600]}
-              onChange={(e) => console.log(e)}
+              defaultValue={configValues.lookBackTime}
+              onChange={(e) =>
+                setConfigValues({ ...configValues, lookBackTime: e })
+              }
               handleStyle={handleStyle}
               trackStyle={trackStyle}
               railStyle={railStyle}
+              marks={{
+                [configValues.lookBackTime]: {
+                  style: {
+                    color: "white",
+                  },
+                  label: <span>{configValues.lookBackTime} sec</span>,
+                },
+              }}
             />
           </ListGroup.Item>
           <br></br>
@@ -179,6 +249,7 @@ function ConfigPanel({ config, updateConfig }) {
               onChange={(e) => {
                 updateConfig("pauseLiveUpdates", e.target.checked);
               }}
+              label={config.pauseLiveUpdates ? "on" : "off"}
             />
           </ListGroup.Item>
           <ListGroup.Item
@@ -192,6 +263,7 @@ function ConfigPanel({ config, updateConfig }) {
               onChange={(e) => {
                 updateConfig("threeDimensionPerspectiveLock", e.target.checked);
               }}
+              label={config.threeDimensionPerspectiveLock ? "on" : "off"}
             />
           </ListGroup.Item>
         </ListGroup>

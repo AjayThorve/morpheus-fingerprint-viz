@@ -1,4 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
+import Navbar from "react-bootstrap/Navbar";
 import React from "react";
 import { tableFromIPC } from "apache-arrow";
 import Image from "next/image";
@@ -117,9 +118,9 @@ export default class CustomD3 extends React.Component {
       }
       await timeout(this.waitTime); //for 5 sec delay
       // temporary hack, infinite loop
-      if (i == totalTime) {
-        i = 90;
-      }
+      // if (i == totalTime) {
+      //   i = 90;
+      // }
     }
   }
 
@@ -171,6 +172,10 @@ export default class CustomD3 extends React.Component {
             ></Image>
           </div>
         </div>
+        <Navbar fixed="bottom" className={styles.bottomnav}>
+          <span>vizualisation powered by Node Rapids</span>
+        </Navbar>
+
         <div id={styles.area}>
           <AreaChart
             totalEvents={this.state.totalEvents}
