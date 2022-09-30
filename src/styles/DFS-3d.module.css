@@ -28,17 +28,26 @@
 .bottomnav {
   background-color: #1e1e1e;
   overflow: hidden;
-  height: 25px;
+  height: 3vh;
   border-top-color: #76b900;
   border-top-style: solid;
-  /* 
-  border-bottom-color: #76b900;
-  border-bottom-style: solid; */
 }
 .bottomnav {
   color: white;
   padding: 10px;
-  justify-content: flex-end;
+}
+
+.bottomnavCredits {
+  width: 15%;
+  font-size: 12px;
+}
+
+.bottomnavNotifications {
+  width: 85%;
+}
+
+.bottomnavNotifications span {
+  float: right;
 }
 
 .topnav span,

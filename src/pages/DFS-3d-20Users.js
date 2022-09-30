@@ -1,5 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import Navbar from "react-bootstrap/Navbar";
+import Spinner from "react-bootstrap/Spinner";
 import React from "react";
 import { tableFromIPC } from "apache-arrow";
 import Image from "next/image";
@@ -48,6 +49,7 @@ export default class CustomD3 extends React.Component {
     this.legendRef = React.createRef();
     this.resetSelected = this.resetSelected.bind(this);
     this.updateAppSettings = this.updateAppSettings.bind(this);
+    this.setLoadingIndicator = this.setLoadingIndicator.bind(this);
     this.setEvents = this.setEvents.bind(this);
     this.setSelectedEvent = this.setSelectedEvent.bind(this);
     this.offsetX = 200;
@@ -72,6 +74,8 @@ export default class CustomD3 extends React.Component {
         pauseLiveUpdates: false,
         threeDimensionPerspectiveLock: true,
       },
+      notifications: "",
+      loading: false,
     };
     this.waitTime = 1000;
   }
@@ -142,10 +146,13 @@ export default class CustomD3 extends React.Component {
     });
   }
 
-  updateAppSettings(key, value) {
-    console.log(key, value);
-    console.log(this.state.AppSettings);
+  setLoadingIndicator(value) {
+    this.setState({
+      loading: value,
+    });
+  }
 
+  updateAppSettings(key, value) {
     this.setState({
       AppSettings: {
         ...this.state.AppSettings,
@@ -173,7 +180,17 @@ export default class CustomD3 extends React.Component {
           </div>
         </div>
         <Navbar fixed="bottom" className={styles.bottomnav}>
-          <span>vizualisation powered by Node Rapids</span>
+          <div className={styles.bottomnavCredits}>
+            <span>visualization powered by Node Rapids</span>
+          </div>
+          <div className={styles.bottomnavNotifications}>
+            <span>{this.state.notifications}</span>
+          </div>
+          <div className={styles.bottomnavLoading}>
+            {this.state.loading ? (
+              <Spinner animation="border" variant="light" size="sm" />
+            ) : null}
+          </div>
         </Navbar>
 
         <div id={styles.area}>
@@ -200,6 +217,7 @@ export default class CustomD3 extends React.Component {
               this.state.AppSettings.threeDimensionPerspectiveLock
             }
             sortBy={this.state.AppSettings.sortBy}
+            setLoadingIndicator={this.setLoadingIndicator}
           />
 
           <SidePanel allEvents={this.state.allEvents}></SidePanel>

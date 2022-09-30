@@ -68,7 +68,7 @@
 #configPanel {
   overflow-y: auto;
   width: 340px;
-  height: 95vh;
+  height: 91vh;
   background-color: #0f0f0f !important;
   box-shadow: 1px 1px 0f0f0f;
   margin-left: 0;
@@ -80,7 +80,7 @@
 #infoPanel {
   overflow-y: auto;
   width: 350px;
-  height: 72vh;
+  height: 69vh;
   background-color: #0f0f0f !important;
   box-shadow: 1px 1px 0f0f0f;
   color: white;

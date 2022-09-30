@@ -118,6 +118,7 @@ class HexGrid extends React.Component {
           }}
           onClick={async (e) => {
             e.stopPropagation();
+            this.props.setLoadingIndicator(true);
             const id = e.instanceId;
             if (id !== this.props.selectedEvent) {
               this.props.setSelectedEvent(id);
@@ -131,6 +132,7 @@ class HexGrid extends React.Component {
             } else {
               this.props.setSelectedEvent(-1);
             }
+            this.props.setLoadingIndicator(false);
           }}
         >
           <cylinderGeometry
@@ -317,6 +319,7 @@ export default class HexGrid3d extends React.Component {
             selectedEvent={this.props.selectedEvent}
             resetSelected={this.props.resetSelected}
             sortBy={this.props.sortBy}
+            setLoadingIndicator={this.props.setLoadingIndicator}
           />
           <MapControls
             makeDefault
