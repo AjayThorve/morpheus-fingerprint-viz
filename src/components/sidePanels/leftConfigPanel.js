@@ -102,6 +102,10 @@ function ConfigPanel({ config, updateConfig }) {
               defaultValue={configValues.colorThreshold}
               onChange={(e) => {
                 setConfigValues({ ...configValues, colorThreshold: e });
+                updateConfig(
+                  "anomalousColorThreshold",
+                  e.map((x) => x / 100)
+                );
               }}
               handleStyle={[handleStyle, handleStyle]}
               trackStyle={trackStyle}

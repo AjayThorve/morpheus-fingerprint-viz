@@ -16,7 +16,16 @@ async function requestJSON(type = "getEventByIndex", params = null) {
   }).then((res) => res.json());
 }
 
-function SidePanel({ allEvents }) {
+function getColorPaletteStyle(threshold) {
+  return `linear-gradient(
+    90deg,
+    rgb(33, 33, 33, 1) ${threshold[0] * 100 - 1}%,
+    rgba(255, 0, 0, 1) ${threshold[0] * 100}%,
+    rgba(255, 255, 0, 1) ${threshold[1] * 100}%
+  )`;
+}
+
+function SidePanel({ allEvents, anomalousColorThreshold }) {
   const [selectedEvent, setSelectedEvent] = useState("");
   const [selectedEventData, setSelectedEventData] = useState({});
   const [show, setShow] = useState(false);
@@ -73,7 +82,12 @@ function SidePanel({ allEvents }) {
             </select>
           </label>
           <div className={styles.customHeader}>Anomalous Scale</div>
-          <div id={styles.colorBarAnomalousScale}></div>
+          <div
+            id={styles.colorBarAnomalousScale}
+            style={{
+              background: getColorPaletteStyle(anomalousColorThreshold),
+            }}
+          ></div>
           <div>
             <p className={styles.colorBarAxis}>0.0</p>{" "}
             <p className={styles.colorBarAxis} style={{ marginLeft: "40%" }}>

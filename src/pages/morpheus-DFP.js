@@ -95,7 +95,12 @@ export default class CustomD3 extends React.Component {
       "getDFElevation",
       this.appendPayload(time)
     );
-    const colors = await requestData("getDFColors", this.appendPayload(time));
+    const colors = await requestData(
+      "getDFColors",
+      `${this.appendPayload(time)}&colorThreshold=${
+        this.state.AppSettings.anomalousColorThreshold
+      }`
+    );
     const userIDs = await requestData("getUniqueIDs", this.appendPayload(time));
     const gridBasedInstanceID = await requestJSON(
       "getGridBasedClickIndex",
@@ -241,7 +246,12 @@ export default class CustomD3 extends React.Component {
             setLoadingIndicator={this.setLoadingIndicator}
           />
 
-          <SidePanel allEvents={this.state.allEvents}></SidePanel>
+          <SidePanel
+            allEvents={this.state.allEvents}
+            anomalousColorThreshold={
+              this.state.AppSettings.anomalousColorThreshold
+            }
+          ></SidePanel>
         </div>
       </div>
     );

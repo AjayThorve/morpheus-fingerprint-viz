@@ -400,7 +400,8 @@ function generateData(
   sort = false,
   sortBy = "sum",
   numUsers = -1,
-  lookBackTime = 20
+  lookBackTime = 20,
+  colorThreshold = [0.1, 0.385]
 ) {
   let order = sort
     ? compAggregate(
@@ -497,7 +498,7 @@ function generateData(
   if (type == "colors") {
     const colors = mapValuesToColorSeries(
       tempData.get("anomalyScoreMax"),
-      [0.1, 0.385, 0.01],
+      [colorThreshold[0], colorThreshold[1], 0.01],
       ["#f00", "#ff0"]
     );
     tempData = tempData.assign({
@@ -552,9 +553,21 @@ export default async function handler(req, res) {
     const lookBackTime = req.query.lookBackTime
       ? parseInt(req.query.lookBackTime)
       : 20;
+    const colorThreshold = req.query.colorThreshold
+      ? req.query.colorThreshold.split(",").map((x) => parseFloat(x))
+      : [0.1, 0.385];
     const tempData = data.filter(data.get("time").le(time));
+
     sendDF(
-      generateData(tempData, "colors", sort, sortBy, numUsers, lookBackTime),
+      generateData(
+        tempData,
+        "colors",
+        sort,
+        sortBy,
+        numUsers,
+        lookBackTime,
+        colorThreshold
+      ),
       res
     );
   } else if (fn == "getGridBasedClickIndex") {
