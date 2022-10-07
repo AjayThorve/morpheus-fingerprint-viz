@@ -50,6 +50,7 @@ export default class CustomD3 extends React.Component {
     this.resetSelected = this.resetSelected.bind(this);
     this.updateAppSettings = this.updateAppSettings.bind(this);
     this.setLoadingIndicator = this.setLoadingIndicator.bind(this);
+    this.loadData = this.loadData.bind(this);
     this.setEvents = this.setEvents.bind(this);
     this.setSelectedEvent = this.setSelectedEvent.bind(this);
     this.offsetX = 200;
@@ -58,7 +59,7 @@ export default class CustomD3 extends React.Component {
     this.hexgridWidth = 1600;
     this.hexgridHeight = this.hexRadius * 50;
     this.state = {
-      selectedEvent: {},
+      selectedEvent: { userID: -1, time: -1 },
       selectedInstance: -1,
       allEvents: [],
       currentTime: 0,
@@ -74,52 +75,65 @@ export default class CustomD3 extends React.Component {
         pauseLiveUpdates: false,
         threeDimensionPerspectiveLock: true,
       },
-      notifications: "",
+      notifications: "sample notifications",
       loading: false,
     };
-    this.waitTime = 1000;
+    this.waitTime = 4000;
+  }
+
+  async loadData(time) {
+    const timeNow = +new Date();
+    const data = await requestJSON(
+      "getEventStats",
+      `time=${time}&sort=${this.state.AppSettings.sortBy != "none"}`
+    );
+    const elevation = await requestData(
+      "getDFElevation",
+      `time=${time}&sort=${this.state.AppSettings.sortBy != "none"}`
+    );
+    const colors = await requestData(
+      "getDFColors",
+      `time=${time}&sort=${this.state.AppSettings.sortBy != "none"}`
+    );
+    const userIDs = await requestData(
+      "getUniqueIDs",
+      `time=${time}&sort=${this.state.AppSettings.sortBy != "none"}`
+    );
+    const gridBasedInstanceID = await requestJSON(
+      "getGridBasedClickIndex",
+      `time=${time}&sort=${
+        this.state.AppSettings.sortBy != "none"
+      }&selectedEventUserID=${
+        this.state.selectedEvent.userID
+      }&selectedEventTime=${this.state.selectedEvent.time}`
+    );
+
+    this.setState({
+      position: elevation,
+      colors: colors,
+      userIDs: userIDs,
+      anomalousEvents: this.state.anomalousEvents.concat([
+        [timeNow, data.totalAnomalousEvents],
+      ]),
+      totalEvents: this.state.totalEvents.concat([[timeNow, data.totalEvents]]),
+      selectedEvent: {
+        ...this.state.selectedEvent,
+        instanceId: parseInt(gridBasedInstanceID.index),
+      },
+    });
   }
   async componentDidMount() {
     const totalTime = parseInt(await requestJSON("getTotalTime"));
-    // drawLegend(this.legendRef);
-    // let axisAdded = false;
-    // await timeout(5000); //for 5 sec delay
-    for (let i = 90; i <= totalTime; i += 1) {
-      const data = await requestJSON(
-        "getEventStats",
-        `time=${i}&sort=${this.state.AppSettings.sortBy != "none"}`
-      );
-      const elevation = await requestData(
-        "getDFElevation",
-        `time=${i}&sort=${this.state.AppSettings.sortBy != "none"}`
-      );
-      const colors = await requestData(
-        "getDFColors",
-        `time=${i}&sort=${this.state.AppSettings.sortBy != "none"}`
-      );
-      const userIDs = await requestData(
-        "getUniqueIDs",
-        `time=${i}&sort=${this.state.AppSettings.sortBy != "none"}`
-      );
-      const timeNow = +new Date();
-
+    for (let i = 95; i <= totalTime; i += 1) {
+      await this.loadData(i);
       this.setState({
         currentTime: i,
-        position: elevation,
-        colors: colors,
-        userIDs: userIDs,
-        anomalousEvents: this.state.anomalousEvents.concat([
-          [timeNow, data.totalAnomalousEvents],
-        ]),
-        totalEvents: this.state.totalEvents.concat([
-          [timeNow, data.totalEvents],
-        ]),
       });
-      if (this.state.selectedEvent !== -1) {
-        this.setSelectedEvent(
-          this.state.selectedEvent + this.state.userIDs.numRows
-        );
-      }
+      // if (this.state.selectedEvent !== -1) {
+      //   this.setSelectedEvent(
+      //     this.state.selectedEvent + this.state.userIDs.numRows
+      //   );
+      // }
       await timeout(this.waitTime); //for 5 sec delay
       // temporary hack, infinite loop
       // if (i == totalTime) {
@@ -140,10 +154,14 @@ export default class CustomD3 extends React.Component {
     });
   }
 
-  setSelectedEvent(event) {
+  async setSelectedEvent(event) {
     this.setState({
       selectedEvent: event,
     });
+    // const elevation = await this.loadElevation(this.state.currentTime, event);
+    // this.setState({
+    //   position: elevation,
+    // });
   }
 
   setLoadingIndicator(value) {
@@ -181,7 +199,7 @@ export default class CustomD3 extends React.Component {
         </div>
         <Navbar fixed="bottom" className={styles.bottomnav}>
           <div className={styles.bottomnavCredits}>
-            <span>visualization powered by Node Rapids</span>
+            <span>Visualization Powered by Node Rapids</span>
           </div>
           <div className={styles.bottomnavNotifications}>
             <span>{this.state.notifications}</span>
@@ -201,8 +219,8 @@ export default class CustomD3 extends React.Component {
         </div>
         <div id={styles.hexgrid}>
           <HexGrid3d
-            rows={34}
-            cols={48}
+            rows={10}
+            cols={20}
             apiURL={"three"}
             waitTime={this.waitTime}
             currentTime={this.state.currentTime}

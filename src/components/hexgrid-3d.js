@@ -47,28 +47,37 @@ class HexGrid extends React.Component {
             this.props.userIDs.batches[0].data.children[0].values
           ),
         });
-        console.log(this.props.selectedEvent);
-        if (this.props.selectedEvent != -1) {
+        console.log(this.props.selectedEvent.instanceId);
+        if (this.props.selectedEvent.instanceId != -1) {
           const positionsTemp = new Float32Array(this.state.position);
-          positionsTemp[this.props.selectedEvent * 16 + 0] = 0.7;
-          positionsTemp[this.props.selectedEvent * 16 + 10] = 0.7;
+          positionsTemp[this.props.selectedEvent.instanceId * 16 + 0] = 0.7;
+          positionsTemp[this.props.selectedEvent.instanceId * 16 + 10] = 0.7;
 
           this.myMesh.current.instanceMatrix =
             new THREE.InstancedBufferAttribute(positionsTemp, 16);
         } else {
           this.myMesh.current.instanceMatrix =
-            new THREE.InstancedBufferAttribute(this.state.position, 16);
+            new THREE.InstancedBufferAttribute(
+              this.props.position.batches[0].data.children[0].values,
+              16
+            );
         }
       }
     }
-    if (prevProps.selectedEvent !== this.props.selectedEvent) {
-      if (this.props.selectedEvent != -1) {
-        const positionsTemp = new Float32Array(this.state.position);
-        positionsTemp[this.props.selectedEvent * 16 + 0] = 0.7;
-        positionsTemp[this.props.selectedEvent * 16 + 10] = 0.7;
+    if (
+      prevProps.selectedEvent.instanceId !== this.props.selectedEvent.instanceId
+    ) {
+      if (this.props.selectedEvent.instanceId != -1) {
+        // const positionsTemp = new Float32Array(this.state.position);
+        this.state.position[prevProps.selectedEvent.instanceId * 16 + 0] = 1;
+        this.state.position[prevProps.selectedEvent.instanceId * 16 + 10] = 1;
+        this.state.position[this.props.selectedEvent.instanceId * 16 + 0] = 0.7;
+        this.state.position[
+          this.props.selectedEvent.instanceId * 16 + 10
+        ] = 0.7;
 
         this.myMesh.current.instanceMatrix = new THREE.InstancedBufferAttribute(
-          positionsTemp,
+          this.state.position,
           16
         );
       } else {
@@ -120,8 +129,7 @@ class HexGrid extends React.Component {
             e.stopPropagation();
             this.props.setLoadingIndicator(true);
             const id = e.instanceId;
-            if (id !== this.props.selectedEvent) {
-              this.props.setSelectedEvent(id);
+            if (id !== this.props.selectedEvent.instanceId) {
               const result = await requestJSON(
                 "getInstances",
                 `time=${this.props.currentTime}&id=${id}&sort=${
@@ -129,8 +137,16 @@ class HexGrid extends React.Component {
                 }`
               );
               this.props.setEvents(result["result"]);
+              await this.props.setSelectedEvent({
+                ...result["result"][0],
+                instanceId: id,
+              });
             } else {
-              this.props.setSelectedEvent(-1);
+              this.props.setSelectedEvent({
+                userID: -1,
+                time: -1,
+                instanceId: -1,
+              });
             }
             this.props.setLoadingIndicator(false);
           }}

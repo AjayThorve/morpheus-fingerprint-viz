@@ -1,8 +1,8 @@
-const { RecordBatchStreamWriter } = require("apache-arrow");
+const { RecordBatchStreamWriter, Uint32 } = require("apache-arrow");
 const pipeline = require("util").promisify(require("stream").pipeline);
 const { DataFrame, Int32, Series, Float32 } = require("@rapidsai/cudf");
 const { mapValuesToColorSeries } = require("../../../components/utils");
-const maxCols = 48;
+const maxCols = 20;
 
 async function sendDF(df, res) {
   await pipeline(
@@ -17,13 +17,15 @@ let data = DataFrame.readParquet({
 }).rename({ anomaly_score: "anomalyScore" });
 
 data = data.assign({
-  userID: data.get("userPrincipalName").encodeLabels(),
+  userID: data.get("userPrincipalName").encodeLabels().cast(new Uint32()),
   elevation: data.get("time"),
   userPrincipalName: data
     .get("userPrincipalName")
     .pad(12, "right", " ")
     .pad(13, "right", "\n"),
 });
+
+data = data.filter(data.get("userID").lt(10));
 
 const names = data
   .sortValues({ userID: { ascending: true } })
@@ -41,8 +43,9 @@ const paddingDF = new DataFrame({
 const dataGrid = offsetBasedGridData(data, 20);
 
 function offsetBasedGridData(df, hexRadius) {
-  const size = df.get("userID").encodeLabels().nunique();
+  const size = df.get("userID").nunique();
   let max = maxCols; //df.get('time').max();
+  console.log(size, max);
   var points = {
     x: [],
     y: [],
@@ -319,8 +322,51 @@ function getInstances(instanceID, df, sort = false) {
     .logicalAnd(data.get("time").eq(time));
   return data
     .filter(resultMask)
-    .select(["time", "index", "anomalyScore"])
+    .select(["userID", "time", "index", "anomalyScore"])
     .sortValues({ anomalyScore: { ascending: false } });
+}
+
+function gridBasedClickIndex(df, sort = false, selectedEvent) {
+  console.log("fn called", selectedEvent);
+  const selectedUserID = selectedEvent.selectedEventUserID;
+  if (
+    selectedUserID == "undefined" ||
+    isNaN(selectedUserID) ||
+    selectedUserID == -1
+  ) {
+    return -1;
+  }
+  const totalUsers = data.get("userID").nunique();
+  const selectedTime = selectedEvent.selectedEventTime;
+  const selectedGridTime = (df.get("time").max() - selectedTime) % maxCols;
+
+  let order = new DataFrame({
+    userID: sort
+      ? df
+          .select(["userID", "anomalyScore"])
+          .groupBy({ by: "userID" })
+          .sum()
+          .sortValues({ anomalyScore: { ascending: false } })
+          .get("userID")
+      : df.get("userID").unique(),
+    index: Series.sequence({
+      size: totalUsers,
+      init: 0,
+      step: 1,
+      type: new Uint32(),
+    }),
+  });
+
+  const orderselectedUserID = order
+    .filter(order.get("userID").eq(selectedUserID))
+    .get("index")
+    .getValue(0);
+
+  console.log(orderselectedUserID + totalUsers * selectedGridTime);
+  if (selectedUserID == 0) {
+    return orderselectedUserID + totalUsers * selectedGridTime; // instanceID
+  }
+  return orderselectedUserID + totalUsers * selectedGridTime - totalUsers; // instanceID
 }
 
 function generateData(df, type = "elevation", sort = false) {
@@ -396,6 +442,7 @@ function generateData(df, type = "elevation", sort = false) {
       });
     }
   });
+
   if (type == "colors") {
     const colors = mapValuesToColorSeries(
       tempData.get("anomalyScoreMax"),
@@ -434,6 +481,25 @@ export default async function handler(req, res) {
     const sort = req.query.sort ? req.query.sort === "true" : false;
     const tempData = data.filter(data.get("time").le(time));
     sendDF(generateData(tempData, "elevation", sort), res);
+  } else if (fn == "getGridBasedClickIndex") {
+    const time = req.query.time
+      ? parseInt(req.query.time)
+      : data.get("time").max();
+    const sort = req.query.sort ? req.query.sort === "true" : false;
+
+    const selectedEventUserID = req.query.selectedEventUserID
+      ? parseInt(req.query.selectedEventUserID)
+      : -1;
+    const selectedEventTime = req.query.selectedEventTime
+      ? parseInt(req.query.selectedEventTime)
+      : -1;
+    const tempData = data.filter(data.get("time").le(time));
+    res.send({
+      index: gridBasedClickIndex(tempData, sort, {
+        selectedEventUserID,
+        selectedEventTime,
+      }),
+    });
   } else if (fn == "getDFColors") {
     const time = req.query.time
       ? parseInt(req.query.time)
@@ -475,7 +541,6 @@ export default async function handler(req, res) {
     const index = parseInt(req.query.index);
     const tempData = data.filter(data.get("index").eq(index));
 
-    print(tempData);
     if (index >= 0) {
       res.send({
         result: tempData.toArrow().toArray(),
