@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import { List } from "react-bootstrap-icons";
 import CloseButton from "react-bootstrap/CloseButton";
@@ -33,7 +33,7 @@ function ConfigPanel({ config, updateConfig }) {
     visibleUsers: [config.visibleUsers.value],
     sortFrequency: [1], //seconds
     updateFrequency: [1], //seconds
-    timePerHex: [2], //seconds
+    timePerHex: [5], //seconds
     lookBackTime: [config.lookBackTime], //seconds
   });
 
@@ -218,6 +218,7 @@ function ConfigPanel({ config, updateConfig }) {
               }}
             />
           </ListGroup.Item>
+          <br></br>*/}
           <br></br>
           <ListGroup.Item
             className={styles.listOfAttributes}
@@ -244,7 +245,8 @@ function ConfigPanel({ config, updateConfig }) {
                 },
               }}
             />
-          </ListGroup.Item> */}
+          </ListGroup.Item>
+          <br></br>
           <br></br>
           <ListGroup.Item
             className={styles.listOfAttributes}
