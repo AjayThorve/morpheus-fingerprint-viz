@@ -46,7 +46,13 @@ function ConfigPanel({ config, updateConfig }) {
         <List color={"white"} size={22} />
       </a>
 
-      <Offcanvas show={show} onHide={handleClose} id={styles.configPanel}>
+      <Offcanvas
+        show={show}
+        onHide={handleClose}
+        scroll={true}
+        backdrop={false}
+        id={styles.configPanel}
+      >
         <Offcanvas.Header>
           <Offcanvas.Title>Settings</Offcanvas.Title>
           <CloseButton variant="white" onClick={() => setShow(false)} />
