@@ -19,7 +19,7 @@
     "@react-three/drei": "^9.19.7",
     "@react-three/fiber": "^8.3.1",
     "@react-three/postprocessing": "^2.6.1",
-    "apache-arrow": "8.0.0",
+    "apache-arrow": "^9.0.0",
     "bootstrap": "5.2.0",
     "camera-controls": "1.36.1",
     "d3": "7.6.1",
