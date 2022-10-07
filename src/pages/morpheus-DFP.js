@@ -78,7 +78,7 @@ export default class CustomD3 extends React.Component {
         visibleUsers: { min: 2, max: 1000, value: 100 },
         lookBackTime: 48,
       },
-      notifications: "sample notifications",
+      notifications: "",
       loading: false,
     };
     this.waitTime = 4000;
@@ -152,22 +152,30 @@ export default class CustomD3 extends React.Component {
     this.setState({
       selectedEvent: -1,
     });
+    this.setState({
+      notifications: "selections reset",
+    });
   }
 
   setEvents(events) {
     this.setState({
       allEvents: events,
     });
+    if (events.length == 0) {
+      this.setState({
+        notifications: "No events found",
+      });
+    } else {
+      this.setState({
+        notifications: "Events retrieved",
+      });
+    }
   }
 
   async setSelectedEvent(event) {
     this.setState({
       selectedEvent: event,
     });
-    // const elevation = await this.loadElevation(this.state.currentTime, event);
-    // this.setState({
-    //   position: elevation,
-    // });
   }
 
   setLoadingIndicator(value) {
