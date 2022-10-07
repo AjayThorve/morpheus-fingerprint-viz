@@ -25,8 +25,6 @@ data = data.assign({
     .pad(13, "right", "\n"),
 });
 
-data = data.filter(data.get("userID").lt(10));
-
 const names = data
   .sortValues({ userID: { ascending: true } })
   .get("userPrincipalName")
@@ -45,7 +43,6 @@ const dataGrid = offsetBasedGridData(data, 20);
 function offsetBasedGridData(df, hexRadius) {
   const size = df.get("userID").nunique();
   let max = maxCols; //df.get('time').max();
-  console.log(size, max);
   var points = {
     x: [],
     y: [],
@@ -66,7 +63,7 @@ function offsetBasedGridData(df, hexRadius) {
           type: new Float32(),
           init: hexRadius * t * Math.sqrt(3),
           step: 0,
-          size: size / 2,
+          size: Math.ceil(size / 2),
         })
       )
       .concat(
@@ -74,7 +71,7 @@ function offsetBasedGridData(df, hexRadius) {
           type: new Float32(),
           init: hexRadius * t * Math.sqrt(3) + (hexRadius * Math.sqrt(3)) / 2,
           step: 0,
-          size: size / 2,
+          size: Math.floor(size / 2),
         })
       );
 
@@ -84,7 +81,7 @@ function offsetBasedGridData(df, hexRadius) {
           type: new Int32(),
           init: t,
           step: max * 2,
-          size: size / 2,
+          size: Math.ceil(size / 2),
         })
       )
       .concat(
@@ -92,7 +89,7 @@ function offsetBasedGridData(df, hexRadius) {
           type: new Int32(),
           init: t + max,
           step: max * 2,
-          size: size / 2,
+          size: Math.floor(size / 2),
         })
       );
 
@@ -102,7 +99,7 @@ function offsetBasedGridData(df, hexRadius) {
           type: new Int32(),
           init: t * size,
           step: 2,
-          size: size / 2,
+          size: Math.ceil(size / 2),
         })
       )
       .concat(
@@ -110,7 +107,7 @@ function offsetBasedGridData(df, hexRadius) {
           type: new Int32(),
           init: t * size + 1,
           step: 2,
-          size: size / 2,
+          size: Math.floor(size / 2),
         })
       );
 
@@ -120,7 +117,7 @@ function offsetBasedGridData(df, hexRadius) {
           type: new Float32(),
           init: 0,
           step: hexRadius * 3,
-          size: size / 2,
+          size: Math.ceil(size / 2),
         })
       )
       .concat(
@@ -128,7 +125,7 @@ function offsetBasedGridData(df, hexRadius) {
           type: new Float32(),
           init: hexRadius * 1.5,
           step: hexRadius * 3,
-          size: size / 2,
+          size: Math.floor(size / 2),
         })
       );
 
@@ -362,7 +359,6 @@ function gridBasedClickIndex(df, sort = false, selectedEvent) {
     .get("index")
     .getValue(0);
 
-  console.log(orderselectedUserID + totalUsers * selectedGridTime);
   if (selectedUserID == 0) {
     return orderselectedUserID + totalUsers * selectedGridTime; // instanceID
   }
@@ -527,7 +523,6 @@ export default async function handler(req, res) {
     const sort = req.query.sort ? req.query.sort === "true" : false;
     const tempData = data.filter(data.get("time").le(time));
 
-    console.log(id, time);
     if (id >= 0) {
       res.send({
         result: getInstances(id, tempData, sort).toArrow().toArray(),
