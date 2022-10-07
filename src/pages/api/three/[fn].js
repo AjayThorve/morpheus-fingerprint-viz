@@ -1,8 +1,7 @@
-const { RecordBatchStreamWriter, Uint32 } = require("apache-arrow");
+const { RecordBatchStreamWriter } = require("apache-arrow");
 const pipeline = require("util").promisify(require("stream").pipeline);
-const { DataFrame, Int32, Series, Float32 } = require("@rapidsai/cudf");
+const { DataFrame, Int32, Uint32, Series, Float32 } = require("@rapidsai/cudf");
 const { mapValuesToColorSeries } = require("../../../components/utils");
-const maxCols = 20;
 
 async function sendDF(df, res) {
   await pipeline(
@@ -38,17 +37,8 @@ const paddingDF = new DataFrame({
   names: names,
 });
 
-const dataGrid = offsetBasedGridData(data, 20);
-
-function offsetBasedGridData(df, hexRadius) {
-  const size = df.get("userID").nunique();
-  let max = maxCols; //df.get('time').max();
-  var points = {
-    x: [],
-    y: [],
-    time: [],
-    row: [], //Array(max).fill([...data.get('userID').unique().sortValues(true)]).flat()
-  };
+function offsetBasedGridData(df, hexRadius, numUsers, lookBackTime) {
+  const size = Math.min(df.get("userID").nunique(), numUsers);
   let x = Series.new([]).cast(new Float32());
   let sortIndex = Series.new([]).cast(new Int32());
   let index = Series.new([]).cast(new Int32());
@@ -56,7 +46,7 @@ function offsetBasedGridData(df, hexRadius) {
   let time = Series.new([]).cast(new Int32());
   let userID = Series.new([]).cast(new Int32());
 
-  for (var t = 0; t < max; t++) {
+  for (var t = 0; t < lookBackTime; t++) {
     x = x
       .concat(
         Series.sequence({
@@ -80,15 +70,15 @@ function offsetBasedGridData(df, hexRadius) {
         Series.sequence({
           type: new Int32(),
           init: t,
-          step: max * 2,
+          step: lookBackTime * 2,
           size: Math.ceil(size / 2),
         })
       )
       .concat(
         Series.sequence({
           type: new Int32(),
-          init: t + max,
-          step: max * 2,
+          init: t + lookBackTime,
+          step: lookBackTime * 2,
           size: Math.floor(size / 2),
         })
       );
@@ -163,109 +153,109 @@ function offsetBasedGridData(df, hexRadius) {
       step: 0,
       init: 1,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     offset_1: Series.sequence({
       step: 0,
       init: 0,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     offset_2: Series.sequence({
       step: 0,
       init: 0,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     offset_3: Series.sequence({
       step: 0,
       init: 0,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     offset_4: Series.sequence({
       step: 0,
       init: 0,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     elevation: Series.sequence({
       step: 0,
       init: 0,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     offset_6: Series.sequence({
       step: 0,
       init: 0,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     offset_7: Series.sequence({
       step: 0,
       init: 0,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     offset_8: Series.sequence({
       step: 0,
       init: 0,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     offset_9: Series.sequence({
       step: 0,
       init: 0,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     offset_10: Series.sequence({
       step: 0,
       init: 1,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     offset_11: Series.sequence({
       step: 0,
       init: 0,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     offset_13: Series.sequence({
       step: 0,
       init: 1,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     offset_15: Series.sequence({
       step: 0,
       init: 1,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     color_r: Series.sequence({
       step: 0,
       init: 1,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     color_g: Series.sequence({
       step: 0,
       init: 1,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     color_b: Series.sequence({
       step: 0,
       init: 1,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
     anomalyScoreMax: Series.sequence({
       step: 0,
       init: 0,
       type: new Float32(),
-      size: size * max,
+      size: size * lookBackTime,
     }),
   });
   return coords.assign({
@@ -298,20 +288,51 @@ function print(df) {
   console.log(df.toArrow().toArray());
 }
 
-function getInstances(instanceID, df, sort = false) {
-  let order = sort
-    ? df
-        .select(["userID", "anomalyScore"])
-        .groupBy({ by: "userID" })
+function compAggregate(df, aggregateFn = "sum") {
+  switch (aggregateFn) {
+    case "sum":
+      return df
         .sum()
         .sortValues({ anomalyScore: { ascending: false } })
-        .get("userID")
+        .get("userID");
+    case "mean":
+      return df
+        .mean()
+        .sortValues({ anomalyScore: { ascending: false } })
+        .get("userID");
+    case "max":
+      return df
+        .max()
+        .sortValues({ anomalyScore: { ascending: false } })
+        .get("userID");
+    case "min":
+      return df
+        .min()
+        .sortValues({ anomalyScore: { ascending: false } })
+        .get("userID");
+    case "count":
+      return df
+        .count()
+        .sortValues({ anomalyScore: { ascending: false } })
+        .get("userID");
+    default:
+      return df
+        .sum()
+        .sortValues({ anomalyScore: { ascending: false } })
+        .get("userID");
+  }
+}
+
+function getInstances(instanceID, df, sort = false, sortBy = "sum") {
+  let order = sort
+    ? compAggregate(
+        df.select(["userID", "anomalyScore"]).groupBy({ by: "userID" }),
+        sortBy
+      )
     : df.get("userID").unique();
   const totalUsers = data.get("userID").nunique();
   const time = parseInt(df.get("time").max() - instanceID / totalUsers);
   const userID = order.getValue(parseInt(instanceID % totalUsers));
-
-  console.log(time, userID);
 
   const resultMask = data
     .get("userID")
@@ -323,8 +344,14 @@ function getInstances(instanceID, df, sort = false) {
     .sortValues({ anomalyScore: { ascending: false } });
 }
 
-function gridBasedClickIndex(df, sort = false, selectedEvent) {
-  console.log("fn called", selectedEvent);
+function gridBasedClickIndex(
+  df,
+  sort = false,
+  sortBy = "sum",
+  selectedEvent = {},
+  numUsers = -1,
+  lookBackTime = 20
+) {
   const selectedUserID = selectedEvent.selectedEventUserID;
   if (
     selectedUserID == "undefined" ||
@@ -335,16 +362,14 @@ function gridBasedClickIndex(df, sort = false, selectedEvent) {
   }
   const totalUsers = data.get("userID").nunique();
   const selectedTime = selectedEvent.selectedEventTime;
-  const selectedGridTime = (df.get("time").max() - selectedTime) % maxCols;
+  const selectedGridTime = (df.get("time").max() - selectedTime) % lookBackTime;
 
   let order = new DataFrame({
     userID: sort
-      ? df
-          .select(["userID", "anomalyScore"])
-          .groupBy({ by: "userID" })
-          .sum()
-          .sortValues({ anomalyScore: { ascending: false } })
-          .get("userID")
+      ? compAggregate(
+          df.select(["userID", "anomalyScore"]).groupBy({ by: "userID" }),
+          sortBy
+        )
       : df.get("userID").unique(),
     index: Series.sequence({
       size: totalUsers,
@@ -353,6 +378,10 @@ function gridBasedClickIndex(df, sort = false, selectedEvent) {
       type: new Uint32(),
     }),
   });
+
+  if (numUsers != -1) {
+    order = order.head(numUsers);
+  }
 
   const orderselectedUserID = order
     .filter(order.get("userID").eq(selectedUserID))
@@ -365,28 +394,45 @@ function gridBasedClickIndex(df, sort = false, selectedEvent) {
   return orderselectedUserID + totalUsers * selectedGridTime - totalUsers; // instanceID
 }
 
-function generateData(df, type = "elevation", sort = false) {
+function generateData(
+  df,
+  type = "elevation",
+  sort = false,
+  sortBy = "sum",
+  numUsers = -1,
+  lookBackTime = 20
+) {
   let order = sort
-    ? df
-        .select(["userID", "anomalyScore"])
-        .groupBy({ by: "userID" })
-        .sum()
-        .sortValues({ anomalyScore: { ascending: false } })
-        .get("userID")
+    ? compAggregate(
+        df.select(["userID", "anomalyScore"]).groupBy({ by: "userID" }),
+        sortBy
+      )
     : df.get("userID").unique();
 
-  const maxRows = data.get("userID").nunique();
-
-  if (type == "userIDs") {
-    return new DataFrame({
-      userID: order,
-      names: names.gather(order),
-    })
-      .join({ other: paddingDF, on: ["userID"], how: "outer", lsuffix: "_r" })
-      .select(["names"]);
+  if (numUsers != -1) {
+    order = order.head(numUsers);
+    df = df.join({
+      other: new DataFrame({ userID: order }),
+      on: ["userID"],
+      how: "right",
+    });
+    // print(df.get("userID").unique());
+    // print(df.get("time").unique());
   }
 
-  let tempData = dataGrid;
+  if (type == "userIDs") {
+    return (
+      new DataFrame({
+        userID: order,
+        names: names.gather(order),
+      })
+        // .join({ other: paddingDF, on: ["userID"], how: "outer", lsuffix: "_r" })
+        .select(["names"])
+    );
+  }
+  const maxRows = Math.min(data.get("userID").nunique(), numUsers);
+  let tempData = offsetBasedGridData(df, 20, maxRows, lookBackTime);
+
   const group = df
     .select(["userID", "time", "anomalyScore", "elevation"])
     .groupBy({ by: ["userID", "time"] });
@@ -403,41 +449,50 @@ function generateData(df, type = "elevation", sort = false) {
     .sortValues({ anomalyScore: { ascending: false } });
 
   console.time(`compute${type}${df.get("time").max()}`);
-  [...df.get("time").unique().sortValues(false).head(maxCols)].forEach((t) => {
-    let sortedResults = finData.filter(finData.get("time").eq(t));
-    sortedResults = sortedResults
-      .join({ other: paddingDF, on: ["userID"], how: "outer", rsuffix: "_r" })
-      .drop(["userID_r"])
-      .sortValues({ userID: { ascending: true } });
+  [...df.get("time").unique().sortValues(false).head(lookBackTime)].forEach(
+    (t) => {
+      let sortedResults = finData.filter(finData.get("time").eq(t));
+      sortedResults = sortedResults
+        .join({ other: paddingDF, on: ["userID"], how: "outer", rsuffix: "_r" })
+        .drop(["userID_r"])
+        .sortValues({ userID: { ascending: true } });
 
-    sortedResults = sortedResults.gather(order);
-    const gridTime = (df.get("time").max() - t) % maxCols;
-    const gridIndex = df
-      .get("userID")
-      .unique()
-      .add(maxRows * gridTime)
-      .cast(new Int32());
+      sortedResults = sortedResults.gather(order);
 
-    if (type == "elevation") {
-      const elevation = sortedResults.get("elevation").replaceNulls(-1).div(t);
-      tempData = tempData.assign({
-        elevation: tempData.get("elevation").scatter(elevation, gridIndex),
-        userID: tempData
-          .get("userID")
-          .scatter(sortedResults.get("userID"), gridIndex),
-      });
-    } else if (type == "colors") {
-      const anomalyScoreMax = sortedResults.get("anomalyScoreMax");
-      tempData = tempData.assign({
-        anomalyScoreMax: tempData
-          .get("anomalyScoreMax")
-          .scatter(anomalyScoreMax, gridIndex),
-        userID: tempData
-          .get("userID")
-          .scatter(sortedResults.get("userID"), gridIndex),
-      });
+      const gridTime = (df.get("time").max() - t) % lookBackTime;
+      const gridIndex = Series.sequence({
+        size: order.length,
+        init: 0,
+        step: 1,
+        type: new Uint32(),
+      })
+        .add(maxRows * gridTime)
+        .cast(new Int32());
+
+      if (type == "elevation") {
+        const elevation = sortedResults
+          .get("elevation")
+          .replaceNulls(-1)
+          .div(t);
+        tempData = tempData.assign({
+          elevation: tempData.get("elevation").scatter(elevation, gridIndex),
+          userID: tempData
+            .get("userID")
+            .scatter(sortedResults.get("userID"), gridIndex),
+        });
+      } else if (type == "colors") {
+        const anomalyScoreMax = sortedResults.get("anomalyScoreMax");
+        tempData = tempData.assign({
+          anomalyScoreMax: tempData
+            .get("anomalyScoreMax")
+            .scatter(anomalyScoreMax, gridIndex),
+          userID: tempData
+            .get("userID")
+            .scatter(sortedResults.get("userID"), gridIndex),
+        });
+      }
     }
-  });
+  );
 
   if (type == "colors") {
     const colors = mapValuesToColorSeries(
@@ -468,43 +523,74 @@ export default async function handler(req, res) {
       ? parseInt(req.query.time)
       : data.get("time").max();
     const sort = req.query.sort ? req.query.sort === "true" : false;
+    const sortBy = req.query.sortBy ? req.query.sortBy : "sum";
+    const numUsers = req.query.numUsers ? parseInt(req.query.numUsers) : -1;
     const tempData = data.filter(data.get("time").le(time));
-    sendDF(generateData(tempData, "userIDs", sort), res);
+    sendDF(generateData(tempData, "userIDs", sort, sortBy, numUsers), res);
   } else if (fn == "getDFElevation") {
     const time = req.query.time
       ? parseInt(req.query.time)
       : data.get("time").max();
     const sort = req.query.sort ? req.query.sort === "true" : false;
+    const sortBy = req.query.sortBy ? req.query.sortBy : "sum";
+    const numUsers = req.query.numUsers ? parseInt(req.query.numUsers) : -1;
+    const lookBackTime = req.query.lookBackTime
+      ? parseInt(req.query.lookBackTime)
+      : 20;
     const tempData = data.filter(data.get("time").le(time));
-    sendDF(generateData(tempData, "elevation", sort), res);
+    sendDF(
+      generateData(tempData, "elevation", sort, sortBy, numUsers, lookBackTime),
+      res
+    );
+  } else if (fn == "getDFColors") {
+    const time = req.query.time
+      ? parseInt(req.query.time)
+      : data.get("time").max();
+    const sort = req.query.sort ? req.query.sort === "true" : false;
+    const sortBy = req.query.sortBy ? req.query.sortBy : "sum";
+    const numUsers = req.query.numUsers ? parseInt(req.query.numUsers) : -1;
+    const lookBackTime = req.query.lookBackTime
+      ? parseInt(req.query.lookBackTime)
+      : 20;
+    const tempData = data.filter(data.get("time").le(time));
+    sendDF(
+      generateData(tempData, "colors", sort, sortBy, numUsers, lookBackTime),
+      res
+    );
   } else if (fn == "getGridBasedClickIndex") {
     const time = req.query.time
       ? parseInt(req.query.time)
       : data.get("time").max();
     const sort = req.query.sort ? req.query.sort === "true" : false;
-
+    const sortBy = req.query.sortBy ? req.query.sortBy : "sum";
     const selectedEventUserID = req.query.selectedEventUserID
       ? parseInt(req.query.selectedEventUserID)
       : -1;
     const selectedEventTime = req.query.selectedEventTime
       ? parseInt(req.query.selectedEventTime)
       : -1;
+    const numUsers = req.query.numUsers ? parseInt(req.query.numUsers) : -1;
+    const lookBackTime = req.query.lookBackTime
+      ? parseInt(req.query.lookBackTime)
+      : 20;
     const tempData = data.filter(data.get("time").le(time));
     res.send({
-      index: gridBasedClickIndex(tempData, sort, {
-        selectedEventUserID,
-        selectedEventTime,
-      }),
+      index: gridBasedClickIndex(
+        tempData,
+        sort,
+        sortBy,
+        {
+          selectedEventUserID,
+          selectedEventTime,
+        },
+        numUsers,
+        lookBackTime
+      ),
     });
-  } else if (fn == "getDFColors") {
-    const time = req.query.time
-      ? parseInt(req.query.time)
-      : data.get("time").max();
-    const sort = req.query.sort ? req.query.sort === "true" : false;
-    const tempData = data.filter(data.get("time").le(time));
-    sendDF(generateData(tempData, "colors", sort), res);
   } else if (fn == "getTotalTime") {
     res.send(data.get("time").max() - 1);
+  } else if (fn == "getNumUsers") {
+    res.send({ numUsers: data.get("userID").nunique() });
   } else if (fn == "getEventStats") {
     const time = req.query.time
       ? parseInt(req.query.time)
@@ -521,11 +607,13 @@ export default async function handler(req, res) {
       : data.get("time").min();
     const id = req.query.id ? parseInt(req.query.id) : -1;
     const sort = req.query.sort ? req.query.sort === "true" : false;
+    const sortBy = req.query.sortBy ? req.query.sortBy : "sum";
+
     const tempData = data.filter(data.get("time").le(time));
 
     if (id >= 0) {
       res.send({
-        result: getInstances(id, tempData, sort).toArrow().toArray(),
+        result: getInstances(id, tempData, sort, sortBy).toArrow().toArray(),
       });
     } else {
       res.send({

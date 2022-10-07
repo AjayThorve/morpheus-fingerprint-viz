@@ -66,14 +66,16 @@ export default class CustomD3 extends React.Component {
       position: null,
       colors: null,
       userIDs: [],
-      sort: true,
       totalEvents: [],
       anomalousEvents: [],
       AppSettings: {
-        sortBy: "none",
+        sort: false,
+        sortBy: "sumAnomalous",
         anomalousColorThreshold: [0.1, 0.385],
         pauseLiveUpdates: false,
         threeDimensionPerspectiveLock: true,
+        visibleUsers: { min: 2, max: 1000, value: 100 },
+        lookBackTime: 48,
       },
       notifications: "sample notifications",
       loading: false,
@@ -85,27 +87,23 @@ export default class CustomD3 extends React.Component {
     const timeNow = +new Date();
     const data = await requestJSON(
       "getEventStats",
-      `time=${time}&sort=${this.state.AppSettings.sortBy != "none"}`
+      `time=${time}&sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}`
     );
     const elevation = await requestData(
       "getDFElevation",
-      `time=${time}&sort=${this.state.AppSettings.sortBy != "none"}`
+      `time=${time}&sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}&numUsers=${this.state.AppSettings.visibleUsers.value}&lookBackTime=${this.state.AppSettings.lookBackTime}`
     );
     const colors = await requestData(
       "getDFColors",
-      `time=${time}&sort=${this.state.AppSettings.sortBy != "none"}`
+      `time=${time}&sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}&numUsers=${this.state.AppSettings.visibleUsers.value}&lookBackTime=${this.state.AppSettings.lookBackTime}`
     );
     const userIDs = await requestData(
       "getUniqueIDs",
-      `time=${time}&sort=${this.state.AppSettings.sortBy != "none"}`
+      `time=${time}&sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}&numUsers=${this.state.AppSettings.visibleUsers.value}`
     );
     const gridBasedInstanceID = await requestJSON(
       "getGridBasedClickIndex",
-      `time=${time}&sort=${
-        this.state.AppSettings.sortBy != "none"
-      }&selectedEventUserID=${
-        this.state.selectedEvent.userID
-      }&selectedEventTime=${this.state.selectedEvent.time}`
+      `time=${time}&sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}&selectedEventUserID=${this.state.selectedEvent.userID}&selectedEventTime=${this.state.selectedEvent.time}&numUsers=${this.state.AppSettings.visibleUsers.value}&lookBackTime=${this.state.AppSettings.lookBackTime}`
     );
 
     this.setState({
@@ -124,16 +122,21 @@ export default class CustomD3 extends React.Component {
   }
   async componentDidMount() {
     const totalTime = parseInt(await requestJSON("getTotalTime"));
+    const numUsers = await requestJSON("getNumUsers");
+    const visibleUsers = {
+      min: this.state.AppSettings.visibleUsers.min,
+      max: numUsers.numUsers,
+      value: Math.min(100, numUsers.numUsers),
+    };
+    this.setState({
+      AppSettings: { ...this.state.AppSettings, visibleUsers },
+    });
+
     for (let i = 95; i <= totalTime; i += 1) {
       await this.loadData(i);
       this.setState({
         currentTime: i,
       });
-      // if (this.state.selectedEvent !== -1) {
-      //   this.setSelectedEvent(
-      //     this.state.selectedEvent + this.state.userIDs.numRows
-      //   );
-      // }
       await timeout(this.waitTime); //for 5 sec delay
       // temporary hack, infinite loop
       // if (i == totalTime) {
@@ -171,6 +174,7 @@ export default class CustomD3 extends React.Component {
   }
 
   updateAppSettings(key, value) {
+    console.log(key, value);
     this.setState({
       AppSettings: {
         ...this.state.AppSettings,
@@ -219,8 +223,8 @@ export default class CustomD3 extends React.Component {
         </div>
         <div id={styles.hexgrid}>
           <HexGrid3d
-            rows={10}
-            cols={20}
+            rows={this.state.AppSettings.visibleUsers.value}
+            cols={this.state.AppSettings.lookBackTime}
             apiURL={"three"}
             waitTime={this.waitTime}
             currentTime={this.state.currentTime}
@@ -234,6 +238,7 @@ export default class CustomD3 extends React.Component {
             threeDimensionPerspectiveLock={
               this.state.AppSettings.threeDimensionPerspectiveLock
             }
+            sort={this.state.AppSettings.sort}
             sortBy={this.state.AppSettings.sortBy}
             setLoadingIndicator={this.setLoadingIndicator}
           />

@@ -30,11 +30,11 @@ function ConfigPanel({ config, updateConfig }) {
   const [show, setShow] = useState(false);
   const [configValues, setConfigValues] = useState({
     colorThreshold: config.anomalousColorThreshold.map((x) => x * 100),
-    visibleUsers: [25000],
+    visibleUsers: [config.visibleUsers.value],
     sortFrequency: [1], //seconds
     updateFrequency: [1], //seconds
     timePerHex: [2], //seconds
-    lookBackTime: [600], //seconds
+    lookBackTime: [config.lookBackTime], //seconds
   });
 
   const handleClose = () => setShow(false);
@@ -51,10 +51,26 @@ function ConfigPanel({ config, updateConfig }) {
           <Offcanvas.Title>Settings</Offcanvas.Title>
           <CloseButton variant="white" onClick={() => setShow(false)} />
         </Offcanvas.Header>
+        <br></br>
 
         <ListGroup>
+          <ListGroup.Item
+            className={styles.listOfAttributes}
+            key={"sortUpdates"}
+          >
+            <div className={styles.configTitle}>Sort Updates</div>
+            <Form.Switch
+              className={`${styles.configSwitch} configSwitch`}
+              checked={config.sort}
+              onChange={(e) => {
+                updateConfig("sort", e.target.checked);
+              }}
+              label={config.sort ? "on" : "off"}
+            />
+          </ListGroup.Item>
+          <br></br>
           <ListGroup.Item className={styles.listOfAttributes} key={"sort"}>
-            <div className={styles.configTitle}>Sort By</div>
+            <div className={styles.configTitle}>Sort By (Highest on Top)</div>
             <select
               name="sortEvents"
               className={styles.configTools}
@@ -63,12 +79,16 @@ function ConfigPanel({ config, updateConfig }) {
                 updateConfig("sortBy", e.target.value);
               }}
             >
-              <option value={"avgAnomalous"}>Average Anomalous Score</option>
-              <option value={"sumAnomalous"}>Sum of Anomalous Score</option>
-              <option value={"none"}>No Sorting</option>
+              <option value={"mean"}>Mean Anomalous Score</option>
+              <option value={"sum"}>Sum of Anomalous Scores</option>
+              <option value={"max"}>Max Anomalous Score</option>
+              <option value={"min"}>Min Anomalous Score</option>
+              <option value={"count"}>No. of Events</option>
             </select>
           </ListGroup.Item>
           <br></br>
+          <br></br>
+
           <ListGroup.Item
             className={styles.listOfAttributes}
             key={"colorThreshold"}
@@ -103,6 +123,7 @@ function ConfigPanel({ config, updateConfig }) {
             />
           </ListGroup.Item>
           <br></br>
+          <br></br>
           <ListGroup.Item
             className={styles.listOfAttributes}
             key={"visibleUsers"}
@@ -110,27 +131,31 @@ function ConfigPanel({ config, updateConfig }) {
             <div className={styles.configTitle}>Visible Users (Rows)</div>
             <Slider
               className={`${styles.configSliders}`}
-              min={30}
-              max={50000}
-              defaultValue={configValues.visibleUsers}
-              onChange={(e) =>
-                setConfigValues({ ...configValues, visibleUsers: e })
-              }
+              min={config.visibleUsers.min}
+              max={config.visibleUsers.max}
+              defaultValue={config.visibleUsers.value}
+              onChange={(e) => {
+                setConfigValues({ ...configValues, visibleUsers: e });
+                updateConfig("visibleUsers", {
+                  ...config.visibleUsers,
+                  value: e,
+                });
+              }}
               handleStyle={handleStyle}
               trackStyle={trackStyle}
               railStyle={railStyle}
               marks={{
-                [configValues.visibleUsers]: {
+                [config.visibleUsers.value]: {
                   style: {
                     color: "white",
                   },
-                  label: <span>{configValues.visibleUsers}</span>,
+                  label: <span>{config.visibleUsers.value}</span>,
                 },
               }}
             />
           </ListGroup.Item>
           <br></br>
-          <ListGroup.Item
+          {/* <ListGroup.Item
             className={styles.listOfAttributes}
             key={"sortFrequency"}
           >
@@ -209,7 +234,7 @@ function ConfigPanel({ config, updateConfig }) {
                 },
               }}
             />
-          </ListGroup.Item>
+          </ListGroup.Item> */}
           <br></br>
           <ListGroup.Item
             className={styles.listOfAttributes}
@@ -221,9 +246,10 @@ function ConfigPanel({ config, updateConfig }) {
               min={0}
               max={1000}
               defaultValue={configValues.lookBackTime}
-              onChange={(e) =>
-                setConfigValues({ ...configValues, lookBackTime: e })
-              }
+              onChange={(e) => {
+                setConfigValues({ ...configValues, lookBackTime: e });
+                updateConfig("lookBackTime", e);
+              }}
               handleStyle={handleStyle}
               trackStyle={trackStyle}
               railStyle={railStyle}
@@ -237,6 +263,7 @@ function ConfigPanel({ config, updateConfig }) {
               }}
             />
           </ListGroup.Item>
+          <br></br>
           <br></br>
           <ListGroup.Item
             className={styles.listOfAttributes}
@@ -252,6 +279,7 @@ function ConfigPanel({ config, updateConfig }) {
               label={config.pauseLiveUpdates ? "on" : "off"}
             />
           </ListGroup.Item>
+          <br></br>
           <ListGroup.Item
             className={styles.listOfAttributes}
             key={"3dPerspectiveLock"}

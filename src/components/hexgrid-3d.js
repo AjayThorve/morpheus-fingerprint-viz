@@ -47,7 +47,6 @@ class HexGrid extends React.Component {
             this.props.userIDs.batches[0].data.children[0].values
           ),
         });
-        console.log(this.props.selectedEvent.instanceId);
         if (this.props.selectedEvent.instanceId != -1) {
           const positionsTemp = new Float32Array(this.state.position);
           positionsTemp[this.props.selectedEvent.instanceId * 16 + 0] = 0.7;
@@ -92,6 +91,7 @@ class HexGrid extends React.Component {
   async componentDidMount() {
     if (this.myMesh.current) {
       this.myMesh.current.geometry.translate(0, 0.5, 0);
+      window.testVar = this.props.position;
       if (this.props.position) {
         this.setState({
           position: this.props.position.batches[0].data.children[0].values,
@@ -132,9 +132,7 @@ class HexGrid extends React.Component {
             if (id !== this.props.selectedEvent.instanceId) {
               const result = await requestJSON(
                 "getInstances",
-                `time=${this.props.currentTime}&id=${id}&sort=${
-                  this.props.sortBy != "none"
-                }`
+                `time=${this.props.currentTime}&id=${id}&sort=${this.props.sort}&sortBy=${this.props.sortBy}`
               );
               this.props.setEvents(result["result"]);
               await this.props.setSelectedEvent({
@@ -334,6 +332,7 @@ export default class HexGrid3d extends React.Component {
             setSelectedEvent={this.props.setSelectedEvent}
             selectedEvent={this.props.selectedEvent}
             resetSelected={this.props.resetSelected}
+            sort={this.props.sort}
             sortBy={this.props.sortBy}
             setLoadingIndicator={this.props.setLoadingIndicator}
           />
