@@ -49,6 +49,7 @@ export default class CustomD3 extends React.Component {
     this.legendRef = React.createRef();
     this.resetSelected = this.resetSelected.bind(this);
     this.updateAppSettings = this.updateAppSettings.bind(this);
+    this.appendPayload = this.appendPayload.bind(this);
     this.setLoadingIndicator = this.setLoadingIndicator.bind(this);
     this.loadData = this.loadData.bind(this);
     this.setEvents = this.setEvents.bind(this);
@@ -83,27 +84,24 @@ export default class CustomD3 extends React.Component {
     this.waitTime = 4000;
   }
 
+  appendPayload(time) {
+    return `time=${time}&sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}&numUsers=${this.state.AppSettings.visibleUsers.value}&lookBackTime=${this.state.AppSettings.lookBackTime}`;
+  }
+
   async loadData(time) {
     const timeNow = +new Date();
-    const data = await requestJSON(
-      "getEventStats",
-      `time=${time}&sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}`
-    );
+    const data = await requestJSON("getEventStats", this.appendPayload(time));
     const elevation = await requestData(
       "getDFElevation",
-      `time=${time}&sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}&numUsers=${this.state.AppSettings.visibleUsers.value}&lookBackTime=${this.state.AppSettings.lookBackTime}`
+      this.appendPayload(time)
     );
-    const colors = await requestData(
-      "getDFColors",
-      `time=${time}&sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}&numUsers=${this.state.AppSettings.visibleUsers.value}&lookBackTime=${this.state.AppSettings.lookBackTime}`
-    );
-    const userIDs = await requestData(
-      "getUniqueIDs",
-      `time=${time}&sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}&numUsers=${this.state.AppSettings.visibleUsers.value}`
-    );
+    const colors = await requestData("getDFColors", this.appendPayload(time));
+    const userIDs = await requestData("getUniqueIDs", this.appendPayload(time));
     const gridBasedInstanceID = await requestJSON(
       "getGridBasedClickIndex",
-      `time=${time}&sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}&selectedEventUserID=${this.state.selectedEvent.userID}&selectedEventTime=${this.state.selectedEvent.time}&numUsers=${this.state.AppSettings.visibleUsers.value}&lookBackTime=${this.state.AppSettings.lookBackTime}`
+      `${this.appendPayload(time)}&selectedEventUserID=${
+        this.state.selectedEvent.userID
+      }&selectedEventTime=${this.state.selectedEvent.time}`
     );
 
     this.setState({
