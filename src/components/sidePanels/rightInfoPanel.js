@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import CloseButton from "react-bootstrap/CloseButton";
+import { InfoCircle } from "react-bootstrap-icons";
 import ListGroup from "react-bootstrap/ListGroup";
 import Ruler from "../ruler";
 import Offcanvas from "react-bootstrap/Offcanvas";
@@ -77,7 +78,21 @@ function SidePanel({ allEvents, anomalousColorThreshold }) {
         </Offcanvas.Header>
         <ListGroup id={styles.infoPanelBody}>
           <label>
-            <div className={styles.customHeader}>Selected Events</div>
+            <div className={styles.customHeader}>
+              Selected Events{" "}
+              <a
+                href="#"
+                data-toggle="tooltip"
+                title="List of events, sorted by anomaly score"
+                data-original-placement="top"
+              >
+                <InfoCircle
+                  color={"white"}
+                  size={15}
+                  style={{ float: "right" }}
+                />
+              </a>
+            </div>
             <select
               name="events"
               id={styles.eventsDropDown}
@@ -95,7 +110,22 @@ function SidePanel({ allEvents, anomalousColorThreshold }) {
               ))}
             </select>
           </label>
-          <div className={styles.customHeader}>Anomalous Scale</div>
+          <br></br>
+          <div className={styles.customHeader}>
+            Anomalous Scale
+            <a
+              href="#"
+              data-toggle="tooltip"
+              title="Color palette for anomaly scores"
+              data-original-placement="top"
+            >
+              <InfoCircle
+                color={"white"}
+                size={15}
+                style={{ float: "right" }}
+              />
+            </a>
+          </div>
           <div
             id={styles.colorBarAnomalousScale}
             style={{
@@ -113,6 +143,18 @@ function SidePanel({ allEvents, anomalousColorThreshold }) {
           </div>
           <div className={`${styles.customHeader} ${styles.underline}`}>
             Attributes
+            <a
+              href="#"
+              data-toggle="tooltip"
+              title="List of attributes impacting the anomaly score"
+              data-original-placement="top"
+            >
+              <InfoCircle
+                color={"white"}
+                size={15}
+                style={{ float: "right" }}
+              />
+            </a>
           </div>
           {["userPrincipalName", "time", "anomalyScore"].map((attr) => (
             <ListGroup.Item
