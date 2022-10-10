@@ -282,9 +282,6 @@ function offsetBasedGridData(df, hexRadius, numUsers, lookBackTime) {
       size: size * lookBackTime,
     }),
   });
-  return coords.assign({
-    row: userID,
-  });
 }
 
 const namesPosition = [
