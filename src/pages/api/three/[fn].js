@@ -24,6 +24,16 @@ async function sendDF(df, res) {
   );
 }
 
+function roundToNearestTime(ser_, seconds = 10) {
+  const timeSeries = Series.new(ser_.cast(new TimestampSecond()).data)
+    .div(seconds)
+    .rint()
+    .mul(seconds)
+    .cast(new Uint64()).data;
+
+  return Series.new({ data: timeSeries, type: new TimestampSecond() });
+}
+
 let data = DataFrame.readParquet({
   sourceType: "files",
   sources: ["./public/data/interesting-users-34-enriched.parquet"],
