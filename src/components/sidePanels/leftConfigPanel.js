@@ -78,7 +78,7 @@ function ConfigPanel({ config, updateConfig }) {
             className={styles.listOfAttributes}
             key={"sortUpdates"}
           >
-            <div className={styles.configTitle}>Sort Updates</div>
+            <div className={styles.configTitle}>Live sort Updates</div>
             <Form.Switch
               className={`${styles.configSwitch} configSwitch`}
               checked={config.sort}
@@ -293,16 +293,16 @@ function ConfigPanel({ config, updateConfig }) {
           <br></br>
           <ListGroup.Item
             className={styles.listOfAttributes}
-            key={"pauseLiveUpdates"}
+            key={"liveUpdates"}
           >
-            <div className={styles.configTitle}>Pause Live Updates</div>
+            <div className={styles.configTitle}>Live Updates</div>
             <Form.Switch
               className={`${styles.configSwitch} configSwitch`}
-              checked={config.pauseLiveUpdates}
+              checked={config.liveUpdates}
               onChange={(e) => {
-                updateConfig("pauseLiveUpdates", e.target.checked);
+                updateConfig("liveUpdates", e.target.checked);
               }}
-              label={config.pauseLiveUpdates ? "on" : "off"}
+              label={config.liveUpdates ? "on" : "off"}
             />
           </ListGroup.Item>
           <br></br>
