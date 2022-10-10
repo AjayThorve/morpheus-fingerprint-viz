@@ -89,24 +89,6 @@ function offsetBasedGridData(df, hexRadius, numUsers, lookBackTime) {
         })
       );
 
-    index = index
-      .concat(
-        Series.sequence({
-          type: new Int32(),
-          init: t,
-          step: lookBackTime * 2,
-          size: Math.ceil(size / 2),
-        })
-      )
-      .concat(
-        Series.sequence({
-          type: new Int32(),
-          init: t + lookBackTime,
-          step: lookBackTime * 2,
-          size: Math.floor(size / 2),
-        })
-      );
-
     sortIndex = sortIndex
       .concat(
         Series.sequence({
@@ -151,28 +133,17 @@ function offsetBasedGridData(df, hexRadius, numUsers, lookBackTime) {
         size: size,
       })
     );
-
-    userID = userID.concat(
-      Series.sequence({
-        type: new Int32(),
-        init: 0,
-        step: 1,
-        size: size,
-      })
-    );
   }
   let coords = new DataFrame({
     x,
     y,
     time,
-    index,
-    userID,
     sortIndex,
   }).sortValues({
     sortIndex: { ascending: true },
   });
 
-  coords = coords.assign({
+  return coords.assign({
     offset_0: Series.sequence({
       step: 0,
       init: 1,
@@ -498,9 +469,6 @@ function generateData(
           .div(t);
         tempData = tempData.assign({
           elevation: tempData.get("elevation").scatter(elevation, gridIndex),
-          userID: tempData
-            .get("userID")
-            .scatter(sortedResults.get("userID"), gridIndex),
         });
       } else if (type == "colors") {
         const anomalyScoreMax = sortedResults.get("anomalyScoreMax");
@@ -508,9 +476,6 @@ function generateData(
           anomalyScoreMax: tempData
             .get("anomalyScoreMax")
             .scatter(anomalyScoreMax, gridIndex),
-          userID: tempData
-            .get("userID")
-            .scatter(sortedResults.get("userID"), gridIndex),
         });
       }
     }
