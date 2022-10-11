@@ -1,0 +1,478 @@
+const pipeline = require("util").promisify(require("stream").pipeline);
+const { RecordBatchStreamWriter } = require("apache-arrow");
+import { DataFrame, Int32, Uint32, Series, Float32 } from "@rapidsai/cudf";
+import { mapValuesToColorSeries } from "../utils";
+
+export async function sendDF(df, res) {
+  await pipeline(
+    RecordBatchStreamWriter.writeAll(df.toArrow()).toNodeStream(),
+    res.writeHead(200, "Ok", { "Content-Type": "application/octet-stream" })
+  );
+}
+
+export function roundToNearestTime(ser_, seconds = 10) {
+  const timeSeries = Series.new(ser_.cast(new TimestampSecond()).data)
+    .div(seconds)
+    .rint()
+    .mul(seconds)
+    .cast(new Uint64()).data;
+
+  return Series.new({ data: timeSeries, type: new TimestampSecond() });
+}
+
+export function offsetBasedGridData(df, hexRadius, numUsers, lookBackTime) {
+  const size = Math.min(df.get("userID").nunique(), numUsers);
+  let x = Series.new([]).cast(new Float32());
+  let sortIndex = Series.new([]).cast(new Int32());
+  let index = Series.new([]).cast(new Int32());
+  let y = Series.new([]).cast(new Float32());
+  let time = Series.new([]).cast(new Int32());
+  let userID = Series.new([]).cast(new Int32());
+
+  for (var t = 0; t < lookBackTime; t++) {
+    x = x
+      .concat(
+        Series.sequence({
+          type: new Float32(),
+          init: hexRadius * t * Math.sqrt(3),
+          step: 0,
+          size: Math.ceil(size / 2),
+        })
+      )
+      .concat(
+        Series.sequence({
+          type: new Float32(),
+          init: hexRadius * t * Math.sqrt(3) + (hexRadius * Math.sqrt(3)) / 2,
+          step: 0,
+          size: Math.floor(size / 2),
+        })
+      );
+
+    sortIndex = sortIndex
+      .concat(
+        Series.sequence({
+          type: new Int32(),
+          init: t * size,
+          step: 2,
+          size: Math.ceil(size / 2),
+        })
+      )
+      .concat(
+        Series.sequence({
+          type: new Int32(),
+          init: t * size + 1,
+          step: 2,
+          size: Math.floor(size / 2),
+        })
+      );
+
+    y = y
+      .concat(
+        Series.sequence({
+          type: new Float32(),
+          init: 0,
+          step: hexRadius * 3,
+          size: Math.ceil(size / 2),
+        })
+      )
+      .concat(
+        Series.sequence({
+          type: new Float32(),
+          init: hexRadius * 1.5,
+          step: hexRadius * 3,
+          size: Math.floor(size / 2),
+        })
+      );
+
+    time = time.concat(
+      Series.sequence({
+        type: new Int32(),
+        init: t,
+        step: 0,
+        size: size,
+      })
+    );
+  }
+  let coords = new DataFrame({
+    x,
+    y,
+    time,
+    sortIndex,
+  }).sortValues({
+    sortIndex: { ascending: true },
+  });
+
+  return coords.assign({
+    offset_0: Series.sequence({
+      step: 0,
+      init: 1,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    offset_1: Series.sequence({
+      step: 0,
+      init: 0,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    offset_2: Series.sequence({
+      step: 0,
+      init: 0,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    offset_3: Series.sequence({
+      step: 0,
+      init: 0,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    offset_4: Series.sequence({
+      step: 0,
+      init: 0,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    elevation: Series.sequence({
+      step: 0,
+      init: 0,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    offset_6: Series.sequence({
+      step: 0,
+      init: 0,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    offset_7: Series.sequence({
+      step: 0,
+      init: 0,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    offset_8: Series.sequence({
+      step: 0,
+      init: 0,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    offset_9: Series.sequence({
+      step: 0,
+      init: 0,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    offset_10: Series.sequence({
+      step: 0,
+      init: 1,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    offset_11: Series.sequence({
+      step: 0,
+      init: 0,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    offset_13: Series.sequence({
+      step: 0,
+      init: 1,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    offset_15: Series.sequence({
+      step: 0,
+      init: 1,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    color_r: Series.sequence({
+      step: 0,
+      init: 1,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    color_g: Series.sequence({
+      step: 0,
+      init: 1,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    color_b: Series.sequence({
+      step: 0,
+      init: 1,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+    anomaly_scoreMax: Series.sequence({
+      step: 0,
+      init: 0,
+      type: new Float32(),
+      size: size * lookBackTime,
+    }),
+  });
+}
+
+export const namesPosition = [
+  "offset_0",
+  "offset_1",
+  "offset_2",
+  "offset_3",
+  "offset_4",
+  "elevation",
+  "offset_6",
+  "offset_7",
+  "offset_8",
+  "offset_9",
+  "offset_10",
+  "offset_11",
+  "x",
+  "offset_13",
+  "y",
+  "offset_15",
+];
+
+export const namesColor = ["color_r", "color_g", "color_b"];
+
+export function compAggregate(df, aggregateFn = "sum") {
+  switch (aggregateFn) {
+    case "sum":
+      return df
+        .sum()
+        .sortValues({ anomaly_score: { ascending: false } })
+        .get("userID");
+    case "mean":
+      return df
+        .mean()
+        .sortValues({ anomaly_score: { ascending: false } })
+        .get("userID");
+    case "max":
+      return df
+        .max()
+        .sortValues({ anomaly_score: { ascending: false } })
+        .get("userID");
+    case "min":
+      return df
+        .min()
+        .sortValues({ anomaly_score: { ascending: false } })
+        .get("userID");
+    case "count":
+      return df
+        .count()
+        .sortValues({ anomaly_score: { ascending: false } })
+        .get("userID");
+    default:
+      return df
+        .sum()
+        .sortValues({ anomaly_score: { ascending: false } })
+        .get("userID");
+  }
+}
+
+export function getInstances(
+  data,
+  instanceID,
+  df,
+  sort = false,
+  sortBy = "sum"
+) {
+  let order = sort
+    ? compAggregate(
+        df.select(["userID", "anomaly_score"]).groupBy({ by: "userID" }),
+        sortBy
+      )
+    : df.get("userID").unique();
+  const totalUsers = data.get("userID").nunique();
+  const time = parseInt(df.get("time").max() - instanceID / totalUsers);
+  const userID = order.getValue(parseInt(instanceID % totalUsers));
+
+  const resultMask = data
+    .get("userID")
+    .eq(userID)
+    .logicalAnd(data.get("time").eq(time));
+  return data
+    .filter(resultMask)
+    .select(["userID", "time", "index", "anomaly_score"])
+    .sortValues({ anomaly_score: { ascending: false } });
+}
+
+export function gridBasedClickIndex(
+  data,
+  df,
+  sort = false,
+  sortBy = "sum",
+  selectedEvent = {},
+  numUsers = -1,
+  lookBackTime = 20
+) {
+  const selectedUserID = selectedEvent.selectedEventUserID;
+  if (
+    selectedUserID == "undefined" ||
+    isNaN(selectedUserID) ||
+    selectedUserID == -1
+  ) {
+    return -1;
+  }
+  const totalUsers = data.get("userID").nunique();
+  const selectedTime = selectedEvent.selectedEventTime;
+  const selectedGridTime = (df.get("time").max() - selectedTime) % lookBackTime;
+
+  let order = new DataFrame({
+    userID: sort
+      ? compAggregate(
+          df.select(["userID", "anomaly_score"]).groupBy({ by: "userID" }),
+          sortBy
+        )
+      : df.get("userID").unique(),
+    index: Series.sequence({
+      size: totalUsers,
+      init: 0,
+      step: 1,
+      type: new Uint32(),
+    }),
+  });
+
+  if (numUsers != -1) {
+    order = order.head(numUsers);
+  }
+
+  const orderselectedUserID = order
+    .filter(order.get("userID").eq(selectedUserID))
+    .get("index")
+    .getValue(0);
+
+  if (selectedUserID == 0) {
+    return orderselectedUserID + totalUsers * selectedGridTime; // instanceID
+  }
+  return orderselectedUserID + totalUsers * selectedGridTime - totalUsers; // instanceID
+}
+
+export function generateData(
+  data,
+  df,
+  type = "elevation",
+  sort = false,
+  sortBy = "sum",
+  numUsers = -1,
+  lookBackTime = 20,
+  colorThreshold = [0.1, 0.385]
+) {
+  let order = sort
+    ? compAggregate(
+        df.select(["userID", "anomaly_score"]).groupBy({ by: "userID" }),
+        sortBy
+      )
+    : df.get("userID").unique();
+
+  if (numUsers != -1) {
+    order = order.head(numUsers);
+    df = df.join({
+      other: new DataFrame({ userID: order }),
+      on: ["userID"],
+      how: "right",
+    });
+  }
+  const names = data
+    .sortValues({ userID: { ascending: true } })
+    .get("userPrincipalName")
+    .unique();
+
+  if (type == "userIDs") {
+    return (
+      new DataFrame({
+        userID: order,
+        names: names.gather(order),
+      })
+        // .join({ other: paddingDF, on: ["userID"], how: "outer", lsuffix: "_r" })
+        .select(["names"])
+    );
+  }
+
+  const paddingDF = new DataFrame({
+    userID: data
+      .sortValues({ userID: { ascending: true } })
+      .get("userID")
+      .unique(),
+    names: names,
+  });
+
+  const maxRows = Math.min(data.get("userID").nunique(), numUsers);
+  let tempData = offsetBasedGridData(df, 20, maxRows, lookBackTime);
+
+  const group = df
+    .select(["userID", "time", "anomaly_score", "elevation"])
+    .groupBy({ by: ["userID", "time"] });
+  let finData = group.sum();
+
+  finData = finData
+    .assign({
+      anomaly_scoreMax: group.max().get("anomaly_score"),
+      userID: finData.get("userID_time").getChild("userID"),
+      time: finData.get("userID_time").getChild("time"),
+    })
+    .drop(["userID_time"])
+    .sortValues({ userID: { ascending: true }, time: { ascending: true } })
+    .sortValues({ anomaly_score: { ascending: false } });
+
+  console.time(`compute${type}${df.get("time").max()}`);
+  [...df.get("time").unique().sortValues(false).head(lookBackTime)].forEach(
+    (t) => {
+      let sortedResults = finData.filter(finData.get("time").eq(t));
+      sortedResults = sortedResults
+        .join({ other: paddingDF, on: ["userID"], how: "outer", rsuffix: "_r" })
+        .drop(["userID_r"])
+        .sortValues({ userID: { ascending: true } });
+
+      sortedResults = sortedResults.gather(order);
+
+      const gridTime = (df.get("time").max() - t) % lookBackTime;
+      const gridIndex = Series.sequence({
+        size: order.length,
+        init: 0,
+        step: 1,
+        type: new Uint32(),
+      })
+        .add(maxRows * gridTime)
+        .cast(new Int32());
+
+      if (type == "elevation") {
+        const elevation = sortedResults
+          .get("elevation")
+          .replaceNulls(-1)
+          .div(t);
+        tempData = tempData.assign({
+          elevation: tempData.get("elevation").scatter(elevation, gridIndex),
+        });
+      } else if (type == "colors") {
+        const anomaly_scoreMax = sortedResults.get("anomaly_scoreMax");
+        tempData = tempData.assign({
+          anomaly_scoreMax: tempData
+            .get("anomaly_scoreMax")
+            .scatter(anomaly_scoreMax, gridIndex),
+        });
+      }
+    }
+  );
+
+  if (type == "colors") {
+    const colors = mapValuesToColorSeries(
+      tempData.get("anomaly_scoreMax"),
+      [colorThreshold[0], colorThreshold[1], 0.01],
+      ["#f00", "#ff0"]
+    );
+    tempData = tempData.assign({
+      color_r: colors.color_r,
+      color_g: colors.color_g,
+      color_b: colors.color_b,
+    });
+  }
+  console.timeEnd(`compute${type}${df.get("time").max()}`);
+
+  return new DataFrame({
+    [type]: tempData
+      .select(type == "elevation" ? namesPosition : namesColor)
+      .interleaveColumns()
+      .cast(new Float32()),
+  });
+}

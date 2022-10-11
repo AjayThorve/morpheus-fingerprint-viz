@@ -25,7 +25,7 @@ import ConfigPanel from "../components/sidePanels/leftConfigPanel";
 import styles from "../styles/DFS-3d.module.css";
 
 async function requestJSON(type = "getEventStats", params = null) {
-  let url = `/api/three/${type}?`;
+  let url = `/api/three/${type}?dataset=interesting-users-34-enriched.parquet&`;
   if (params != null) {
     url += `${params}`;
   }
@@ -38,7 +38,7 @@ async function requestJSON(type = "getEventStats", params = null) {
 }
 
 async function requestData(type = "getDF", params = null) {
-  let url = `/api/three/${type}?`;
+  let url = `/api/three/${type}?dataset=interesting-users-34-enriched.parquet&`;
   if (params != null) {
     url += `${params}`;
   }

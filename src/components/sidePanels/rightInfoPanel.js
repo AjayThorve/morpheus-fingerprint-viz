@@ -104,7 +104,7 @@ function SidePanel({ allEvents, anomalousColorThreshold }) {
             >
               {allEvents.map((event) => (
                 <option key={event.index} value={event.index}>
-                  {parseFloat(event.anomalyScore).toFixed(3)} @ time:
+                  {parseFloat(event.anomaly_score).toFixed(3)} @ time:
                   {event.time}, Event[{event["index"]}]
                 </option>
               ))}
@@ -156,7 +156,7 @@ function SidePanel({ allEvents, anomalousColorThreshold }) {
               />
             </a>
           </div>
-          {["userPrincipalName", "time", "anomalyScore"].map((attr) => (
+          {["userPrincipalName", "time", "anomaly_score"].map((attr) => (
             <ListGroup.Item
               className={styles.listOfAttributes}
               variant="dark"
@@ -166,10 +166,10 @@ function SidePanel({ allEvents, anomalousColorThreshold }) {
                 {attr.charAt(0).toUpperCase() + attr.slice(1)}:{" "}
                 <span
                   style={{
-                    color: attr == "anomalyScore" ? "#b95422" : "#f2f2f2",
+                    color: attr == "anomaly_score" ? "#b95422" : "#f2f2f2",
                   }}
                 >
-                  {attr == "anomalyScore"
+                  {attr == "anomaly_score"
                     ? parseFloat(selectedEventData[attr]).toFixed(3)
                     : selectedEventData[attr]}
                 </span>
@@ -193,7 +193,7 @@ function SidePanel({ allEvents, anomalousColorThreshold }) {
               <span className={styles.selectedEventTitle}>
                 {attr}:{" "}
                 <span className={styles.selectedEvent}>
-                  {attr == "anomalyScore"
+                  {attr == "anomaly_score"
                     ? parseFloat(selectedEventData[attr]).toFixed(3)
                     : selectedEventData[attr]}
                 </span>
