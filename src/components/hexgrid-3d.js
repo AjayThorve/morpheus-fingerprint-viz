@@ -12,18 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { useEffect } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import React from "react";
+import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 import { OrthographicCamera, MapControls } from "@react-three/drei";
-import { acceleratedRaycast } from "three-mesh-bvh";
 import { Text } from "@react-three/drei";
 import styles from "../styles/components/hexgrid.module.css";
 
-THREE.Mesh.prototype.raycast = acceleratedRaycast;
-
 async function requestJSON(type = "getInstances", params = null) {
-  let url = `/api/three/${type}?`;
+  let url = `/api/${type}?`;
   if (params != null) {
     url += `${params}`;
   }
