@@ -20,7 +20,7 @@ import { Text } from "@react-three/drei";
 import styles from "../styles/components/hexgrid.module.css";
 
 async function requestJSON(type = "getInstances", params = null) {
-  let url = `/api/${type}?`;
+  let url = `/api/${type}?dataset=interesting-users-34-enriched.parquet&`;
   if (params != null) {
     url += `${params}`;
   }

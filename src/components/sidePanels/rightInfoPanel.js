@@ -21,7 +21,7 @@ import Offcanvas from "react-bootstrap/Offcanvas";
 import styles from "../../styles/components/sidePanels.module.css";
 
 async function requestJSON(type = "getEventByIndex", params = null) {
-  let url = `/api/${type}?`;
+  let url = `/api/${type}?dataset=interesting-users-34-enriched.parquet&`;
   if (params != null) {
     url += `${params}`;
   }
