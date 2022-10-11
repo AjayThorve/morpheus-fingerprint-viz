@@ -17,7 +17,6 @@ const cache = require("../../components/server/cacheDatasets")();
 import runMiddleware from "../../components/server/runMiddleware";
 
 export default async function handler(req, res) {
-  const fn = req.query.fn;
   const datasetName = req.query.dataset;
   await runMiddleware(datasetName, req, res, cache);
   const time = req.query.time
