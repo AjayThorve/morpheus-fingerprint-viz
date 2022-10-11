@@ -45,7 +45,6 @@ module.exports = () => {
 async function readDataset(datasets, datasetName) {
   let fn = DataFrame.readParquet;
   datasetName = path.join(process.env.datasetPath, datasetName);
-  console.log(datasetName);
   if (path.extname(datasetName) == "csv") {
     fn = DataFrame.readCSV;
   }
