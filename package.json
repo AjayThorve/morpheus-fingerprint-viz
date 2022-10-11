@@ -9,27 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@deck.gl/aggregation-layers": "8.7.12",
-    "@deck.gl/carto": "^8.8.9",
-    "@deck.gl/core": "8.7.12",
-    "@deck.gl/layers": "8.7.12",
-    "@deck.gl/react": "8.7.12",
     "@observablehq/plot": "0.5.2",
     "@rapidsai/cudf": "^22.8.0",
     "@react-three/drei": "^9.19.7",
     "@react-three/fiber": "^8.3.1",
-    "@react-three/postprocessing": "^2.6.1",
     "apache-arrow": "^9.0.0",
     "bootstrap": "5.2.0",
-    "camera-controls": "1.36.1",
-    "d3": "7.6.1",
-    "d3-hexbin": "0.2.2",
     "d3-node": "^2.2.3",
     "echarts": "^5.3.3",
     "echarts-for-react": "^3.0.2",
-    "h3-js": "^4.0.0-rc1",
-    "jsdom": "^16.5.0",
-    "moment-timezone": "^0.5.35",
     "next": "12.2.2",
     "next-transpile-modules": "^9.0.0",
     "rc-slider": "^10.0.1",
@@ -37,8 +25,7 @@
     "react-bootstrap": "2.4.0",
     "react-bootstrap-icons": "^1.8.4",
     "react-dom": "18.2.0",
-    "three": "^0.143.0",
-    "three-mesh-bvh": "^0.5.15"
+    "three": "^0.143.0"
   },
   "devDependencies": {
     "eslint": "8.20.0",
