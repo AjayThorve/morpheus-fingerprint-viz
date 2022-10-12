@@ -20,7 +20,7 @@ export default function handler(req, res) {
   const dataPath = JSON.parse(
     fs.readFileSync(path.join(BASE_PATH, "config.json"))
   );
-  const dirPath = path.join(BASE_PATH, dataPath.datasetPath);
+  const dirPath = path.join(BASE_PATH, dataPath.dataset_path);
   let fileNames = [];
   fs.readdir(dirPath, (err, files) => {
     if (err) {

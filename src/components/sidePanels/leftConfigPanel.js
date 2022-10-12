@@ -248,10 +248,7 @@ function ConfigPanel({ config, updateConfig }) {
               defaultValue={configValues.timePerHex}
               onChange={(e) => {
                 setConfigValues({ ...configValues, timePerHex: e });
-                updateConfig(
-                  "timePerHex",
-                  e.map((x) => x / 100)
-                );
+                updateConfig("timePerHex", e);
               }}
               handleStyle={handleStyle}
               trackStyle={trackStyle}

@@ -91,7 +91,7 @@ export default class CustomD3 extends React.Component {
         threeDimensionPerspectiveLock: true,
         visibleUsers: { min: 2, max: 1000, value: 100 },
         lookBackTime: parseInt(process.env.NEXT_PUBLIC_look_back_time),
-        timePerHex: parseInt(process.env.NEXT_PUBLIC_time_per_hex),
+        timePerHex: parseInt(process.env.NEXT_PUBLIC_time_bin_per_hex),
       },
       notifications: "",
       loading: false,
