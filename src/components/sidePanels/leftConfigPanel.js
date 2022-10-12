@@ -47,8 +47,10 @@ function ConfigPanel({ config, updateConfig }) {
     visibleUsers: [config.visibleUsers.value],
     sortFrequency: [1], //seconds
     updateFrequency: [1], //seconds
-    timePerHex: [5], //seconds
+    timePerHex: [config.timePerHex], //seconds
     lookBackTime: [config.lookBackTime], //seconds
+    lookBackTimeRange: eval(process.env.NEXT_PUBLIC_look_back_time_range),
+    timePerHexRange: eval(process.env.NEXT_PUBLIC_time_bin_per_hex_range),
   });
 
   const handleClose = () => setShow(false);
@@ -241,12 +243,16 @@ function ConfigPanel({ config, updateConfig }) {
             <div className={styles.configTitle}>Time Bin Per Hexagon</div>
             <Slider
               className={`${styles.configSliders}`}
-              min={1}
-              max={100}
+              min={configValues.timePerHexRange[0]}
+              max={configValues.timePerHexRange[1]}
               defaultValue={configValues.timePerHex}
-              onChange={(e) =>
-                setConfigValues({ ...configValues, timePerHex: e })
-              }
+              onChange={(e) => {
+                setConfigValues({ ...configValues, timePerHex: e });
+                updateConfig(
+                  "timePerHex",
+                  e.map((x) => x / 100)
+                );
+              }}
               handleStyle={handleStyle}
               trackStyle={trackStyle}
               railStyle={railStyle}
@@ -269,8 +275,8 @@ function ConfigPanel({ config, updateConfig }) {
             <div className={styles.configTitle}>Look Back Time</div>
             <Slider
               className={`${styles.configSliders}`}
-              min={0}
-              max={1000}
+              min={configValues.lookBackTimeRange[0]}
+              max={configValues.lookBackTimeRange[1]}
               defaultValue={configValues.lookBackTime}
               onChange={(e) => {
                 setConfigValues({ ...configValues, lookBackTime: e });
