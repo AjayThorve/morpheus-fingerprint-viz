@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { roundToNearestTime } from "./utils";
 const { DataFrame, Uint32 } = require("@rapidsai/cudf");
 const path = require("path");
 
@@ -55,6 +56,10 @@ async function readDataset(datasets, datasetName) {
 
   return data.assign({
     userID: data.get("userPrincipalName").encodeLabels().cast(new Uint32()),
+    time: roundToNearestTime(data.get("createdTime"), 5)
+      ._castAsString()
+      .encodeLabels()
+      .cast(new Uint32()),
     elevation: data.get("time"),
     userPrincipalName: data
       .get("userPrincipalName")

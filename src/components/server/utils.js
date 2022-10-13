@@ -1,6 +1,14 @@
 const pipeline = require("util").promisify(require("stream").pipeline);
 const { RecordBatchStreamWriter } = require("apache-arrow");
-import { DataFrame, Int32, Uint32, Series, Float32 } from "@rapidsai/cudf";
+import {
+  DataFrame,
+  Int32,
+  Uint32,
+  Series,
+  Float32,
+  Uint64,
+  TimestampSecond,
+} from "@rapidsai/cudf";
 import { mapValuesToColorSeries } from "../utils";
 
 export async function sendDF(df, res) {
@@ -284,7 +292,9 @@ export function getInstances(
       )
     : df.get("userID").unique();
   const totalUsers = data.get("userID").nunique();
-  const time = parseInt(df.get("time").max() - instanceID / totalUsers);
+  const time = parseInt(
+    Math.round(df.get("time").max() - instanceID / totalUsers)
+  );
   const userID = order.getValue(parseInt(instanceID % totalUsers));
 
   const resultMask = data

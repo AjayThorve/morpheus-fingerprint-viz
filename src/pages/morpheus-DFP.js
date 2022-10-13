@@ -150,16 +150,16 @@ export default class CustomD3 extends React.Component {
       AppSettings: { ...this.state.AppSettings, visibleUsers },
     });
 
-    for (let i = 95; i <= totalTime; i += 1) {
+    for (
+      let i = totalTime - this.state.AppSettings.lookBackTime;
+      i <= totalTime;
+      i += 1
+    ) {
       await this.loadData(i);
       this.setState({
         currentTime: i,
       });
       await timeout(this.waitTime); //for 5 sec delay
-      // temporary hack, infinite loop
-      // if (i == totalTime) {
-      //   i = 90;
-      // }
     }
   }
 
