@@ -87,10 +87,16 @@ export default class CustomD3 extends React.Component {
       AppSettings: {
         sort: true,
         sortBy: "sum",
-        anomalousColorThreshold: [0.1, 0.385],
+        anomalousColorThreshold: eval(
+          process.env.NEXT_PUBLIC_anomaly_color_threshold
+        ),
         liveUpdates: true,
         threeDimensionPerspectiveLock: true,
-        visibleUsers: { min: 2, max: 1000, value: 100 },
+        visibleUsers: {
+          min: 2,
+          max: process.env.NEXT_PUBLIC_visible_users_max,
+          value: process.env.NEXT_PUBLIC_visible_users,
+        },
         lookBackTime: parseInt(process.env.NEXT_PUBLIC_look_back_time),
         timePerHex: parseInt(process.env.NEXT_PUBLIC_time_bin_per_hex),
       },
