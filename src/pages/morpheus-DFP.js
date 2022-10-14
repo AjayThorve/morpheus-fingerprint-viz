@@ -218,7 +218,6 @@ export default class CustomD3 extends React.Component {
   }
 
   updateAppSettings(key, value) {
-    console.log(key, value);
     this.setState({
       AppSettings: {
         ...this.state.AppSettings,
