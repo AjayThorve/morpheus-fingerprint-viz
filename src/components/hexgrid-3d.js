@@ -17,6 +17,7 @@ import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 import { OrthographicCamera, MapControls } from "@react-three/drei";
 import { Text } from "@react-three/drei";
+import TimeAxis3D from "./timeAxis3D";
 import styles from "../styles/components/hexgrid.module.css";
 
 async function requestJSON(type = "getInstances", params = null) {
@@ -37,8 +38,8 @@ class HexGrid extends React.Component {
     this.globalMesh = React.createRef();
     this.colorRef = React.createRef();
     this.state = {
-      rows: props.rows || 20,
-      cols: props.cols || 13,
+      rows: props.appSettings.visibleUsers.value || 20,
+      cols: props.appSettings.lookBackTime || 13,
       hexRadius: props.hexRadius || 20,
       position: new Float32Array([]),
       colors: new Float32Array([]),
@@ -143,7 +144,7 @@ class HexGrid extends React.Component {
             if (id !== this.props.selectedEvent.instanceId) {
               const result = await requestJSON(
                 "getInstances",
-                `time=${this.props.currentTime}&id=${id}&sort=${this.props.sort}&sortBy=${this.props.sortBy}`
+                `time=${this.props.currentTime}&id=${id}&sort=${this.props.appSettings.sort}&sortBy=${this.props.appSettings.sortBy}`
               );
               this.props.setEvents(result["result"]);
               await this.props.setSelectedEvent({
@@ -185,92 +186,7 @@ class HexGrid extends React.Component {
         >
           {this.state.userIDs}
         </Text>
-        <Text
-          scale={[1, 1, 1]}
-          rotation={[-1.57, 0, 0]}
-          color="white" // default
-          fontSize={20}
-          maxWidth={1800}
-          anchorY={"right"}
-          position-x={812}
-          position-z={-50}
-          lineHeight={1.5}
-        >
-          {Array(48).fill("|      ").join("")}
-        </Text>
-        <Text
-          scale={[1, 1, 1]}
-          rotation={[-1.57, 0, 0]}
-          color="white" // default
-          fontSize={18}
-          maxWidth={1800}
-          anchorY={"right"}
-          position-x={0}
-          position-z={-75}
-          lineHeight={1.5}
-        >
-          {"Now"}
-        </Text>
-        <Text
-          scale={[1, 1, 1]}
-          rotation={[-1.57, 0, 0]}
-          color="white" // default
-          fontSize={18}
-          maxWidth={1800}
-          anchorY={"right"}
-          position-x={400}
-          position-z={-75}
-          lineHeight={1.5}
-        >
-          {new Date(+new Date() - 10000).toLocaleTimeString("en-US", {
-            hour12: false,
-          })}
-        </Text>
-        <Text
-          scale={[1, 1, 1]}
-          rotation={[-1.57, 0, 0]}
-          color="white" // default
-          fontSize={18}
-          maxWidth={1800}
-          anchorY={"right"}
-          position-x={800}
-          position-z={-75}
-          lineHeight={1.5}
-        >
-          {new Date(+new Date() - 20000).toLocaleTimeString("en-US", {
-            hour12: false,
-          })}
-        </Text>
-        <Text
-          scale={[1, 1, 1]}
-          rotation={[-1.57, 0, 0]}
-          color="white" // default
-          fontSize={18}
-          maxWidth={1800}
-          anchorY={"right"}
-          position-x={1200}
-          position-z={-75}
-          lineHeight={1.5}
-        >
-          {new Date(+new Date() - 30000).toLocaleTimeString("en-US", {
-            hour12: false,
-          })}
-        </Text>
-        <Text
-          scale={[1, 1, 1]}
-          rotation={[-1.57, 0, 0]}
-          color="white" // default
-          fontSize={18}
-          maxWidth={1800}
-          anchorY={"right"}
-          position-x={1600}
-          position-z={-75}
-          lineHeight={1.5}
-        >
-          {new Date(+new Date() - 40000).toLocaleTimeString("en-US", {
-            hour12: false,
-          })}
-        </Text>
+        <TimeAxis3D></TimeAxis3D>
       </mesh>
     );
   }
@@ -295,9 +211,9 @@ export default class HexGrid3d extends React.Component {
   }
   componentDidUpdate(prevProps, prevState) {
     if (
-      prevProps.threeDimensionPerspectiveLock !==
-        this.props.threeDimensionPerspectiveLock &&
-      this.props.threeDimensionPerspectiveLock == true
+      prevProps.appSettings.threeDimensionPerspectiveLock !==
+        this.props.appSettings.threeDimensionPerspectiveLock &&
+      this.props.appSettings.threeDimensionPerspectiveLock == true
     ) {
       this.resetControls();
     }
@@ -331,9 +247,7 @@ export default class HexGrid3d extends React.Component {
 
           <HexGrid
             currentTime={this.props.currentTime}
-            rows={this.props.rows}
             apiURL={this.props.apiURL}
-            cols={this.props.cols}
             waitTime={this.props.waitTime}
             hexRadius={20}
             position={this.props.position}
@@ -343,9 +257,8 @@ export default class HexGrid3d extends React.Component {
             setSelectedEvent={this.props.setSelectedEvent}
             selectedEvent={this.props.selectedEvent}
             resetSelected={this.props.resetSelected}
-            sort={this.props.sort}
-            sortBy={this.props.sortBy}
             setLoadingIndicator={this.props.setLoadingIndicator}
+            appSettings={this.props.appSettings}
           />
           <MapControls
             makeDefault
@@ -355,7 +268,9 @@ export default class HexGrid3d extends React.Component {
             maxDistance={5000}
             maxPolarAngle={Math.PI / 2}
             minAzimuthAngle={
-              this.props.threeDimensionPerspectiveLock ? 0 : Math.PI / 2
+              this.props.appSettings.threeDimensionPerspectiveLock
+                ? 0
+                : Math.PI / 2
             }
             maxAzimuthAngle={0}
           />
