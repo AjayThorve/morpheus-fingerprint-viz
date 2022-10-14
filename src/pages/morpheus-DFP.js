@@ -79,6 +79,7 @@ export default class CustomD3 extends React.Component {
       allEvents: [],
       currentTime: 0,
       position: null,
+      timestamps: [],
       colors: null,
       userIDs: [],
       totalEvents: [],
@@ -104,7 +105,6 @@ export default class CustomD3 extends React.Component {
   }
 
   async loadData(time) {
-    const timeNow = +new Date();
     const data = await requestJSON(
       "getEventStats",
       `${this.appendPayload(time)}&anomalyThreshold=${
@@ -120,6 +120,10 @@ export default class CustomD3 extends React.Component {
       `${this.appendPayload(time)}&colorThreshold=${
         this.state.AppSettings.anomalousColorThreshold
       }`
+    );
+    const timestamps = await requestJSON(
+      "getTimeStamps",
+      this.appendPayload(time)
     );
     const userIDs = await requestData("getUniqueIDs", this.appendPayload(time));
     const gridBasedInstanceID = await requestJSON(
@@ -143,6 +147,7 @@ export default class CustomD3 extends React.Component {
         ...this.state.selectedEvent,
         instanceId: parseInt(gridBasedInstanceID.index),
       },
+      timestamps: timestamps.timeStamps,
     });
   }
   async componentDidMount() {
@@ -268,6 +273,7 @@ export default class CustomD3 extends React.Component {
             resetSelected={this.resetSelected}
             appSettings={this.state.AppSettings}
             setLoadingIndicator={this.setLoadingIndicator}
+            timestamps={this.state.timestamps}
           />
 
           <SidePanel

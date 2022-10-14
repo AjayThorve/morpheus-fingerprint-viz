@@ -45,6 +45,7 @@ class HexGrid extends React.Component {
       colors: new Float32Array([]),
       selectedInstance: null,
       repeatfn: null,
+      timestamps: this.props.timestamps,
     };
     this.highlightColor = new THREE.Color("#ff0000");
   }
@@ -97,6 +98,11 @@ class HexGrid extends React.Component {
           16
         );
       }
+    }
+    if (prevProps.timestamps !== this.props.timestamps) {
+      this.setState({
+        timestamps: this.props.timestamps,
+      });
     }
   }
 
@@ -186,7 +192,10 @@ class HexGrid extends React.Component {
         >
           {this.state.userIDs}
         </Text>
-        <TimeAxis3D></TimeAxis3D>
+        <TimeAxis3D
+          ticks={this.props.appSettings.lookBackTime}
+          timestamps={this.state.timestamps}
+        ></TimeAxis3D>
       </mesh>
     );
   }
@@ -259,6 +268,7 @@ export default class HexGrid3d extends React.Component {
             resetSelected={this.props.resetSelected}
             setLoadingIndicator={this.props.setLoadingIndicator}
             appSettings={this.props.appSettings}
+            timestamps={this.props.timestamps}
           />
           <MapControls
             makeDefault
