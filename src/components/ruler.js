@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { useEffect, useRef, useState } from "react";
 import styles from "../styles/components/ruler.module.css";
 
 function Ruler({ mean, score }) {
