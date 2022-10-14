@@ -256,8 +256,6 @@ export default class CustomD3 extends React.Component {
         </div>
         <div id={styles.hexgrid}>
           <HexGrid3d
-            rows={this.state.AppSettings.visibleUsers.value}
-            cols={this.state.AppSettings.lookBackTime}
             apiURL={"three"}
             waitTime={this.waitTime}
             currentTime={this.state.currentTime}
@@ -268,11 +266,7 @@ export default class CustomD3 extends React.Component {
             setSelectedEvent={this.setSelectedEvent}
             selectedEvent={this.state.selectedEvent}
             resetSelected={this.resetSelected}
-            threeDimensionPerspectiveLock={
-              this.state.AppSettings.threeDimensionPerspectiveLock
-            }
-            sort={this.state.AppSettings.sort}
-            sortBy={this.state.AppSettings.sortBy}
+            appSettings={this.state.AppSettings}
             setLoadingIndicator={this.setLoadingIndicator}
           />
 
