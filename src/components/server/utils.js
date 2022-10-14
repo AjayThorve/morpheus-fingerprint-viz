@@ -387,18 +387,6 @@ export function generateData(
     .sortValues({ userID: { ascending: true } })
     .get("userPrincipalName")
     .unique();
-
-  if (type == "userIDs") {
-    return (
-      new DataFrame({
-        userID: order,
-        names: names.gather(order),
-      })
-        // .join({ other: paddingDF, on: ["userID"], how: "outer", lsuffix: "_r" })
-        .select(["names"])
-    );
-  }
-
   const paddingDF = new DataFrame({
     userID: data
       .sortValues({ userID: { ascending: true } })
@@ -407,17 +395,27 @@ export function generateData(
     names: names,
   });
 
+  if (type == "userIDs") {
+    return new DataFrame({
+      userID: order,
+      names: names.gather(order),
+    })
+      .join({ other: paddingDF, on: ["userID"], how: "outer", lsuffix: "_r" })
+      .select(["names"]);
+  }
+
   const maxRows = Math.min(data.get("userID").nunique(), numUsers);
   let tempData = offsetBasedGridData(df, 20, maxRows, lookBackTime);
 
   const group = df
-    .select(["userID", "time", "anomaly_score", "elevation"])
+    .select(["userID", "time", "anomaly_score"])
     .groupBy({ by: ["userID", "time"] });
   let finData = group.sum();
 
   finData = finData
     .assign({
       anomaly_scoreMax: group.max().get("anomaly_score"),
+      elevation: group.count().get("anomaly_score"),
       userID: finData.get("userID_time").getChild("userID"),
       time: finData.get("userID_time").getChild("time"),
     })
@@ -447,10 +445,7 @@ export function generateData(
         .cast(new Int32());
 
       if (type == "elevation") {
-        const elevation = sortedResults
-          .get("elevation")
-          .replaceNulls(-1)
-          .div(t);
+        const elevation = sortedResults.get("elevation").replaceNulls(-1);
         tempData = tempData.assign({
           elevation: tempData.get("elevation").scatter(elevation, gridIndex),
         });

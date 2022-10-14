@@ -11,14 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { roundToNearestTime } from "./utils";
-const { DataFrame, Uint32 } = require("@rapidsai/cudf");
+const { DataFrame, Uint32, TimestampSecond } = require("@rapidsai/cudf");
 const path = require("path");
 
 module.exports = () => {
   let timeout = {};
   let datasets = {};
-  // let uberTracts = null;
 
   function clearCachedGPUData(datasetName) {
     datasets[datasetName] = null;
@@ -49,18 +49,21 @@ async function readDataset(datasets, datasetName) {
   if (path.extname(datasetName) == "csv") {
     fn = DataFrame.readCSV;
   }
-  const data = fn({
+  let data = fn({
     sourceType: "files",
     sources: [datasetName],
   });
 
+  data = data
+    .assign({
+      userID: data.get("userPrincipalName").encodeLabels().cast(new Uint32()),
+      time: data.get("createdTime").cast(new TimestampSecond()),
+    })
+    .sortValues({ time: { ascending: true } });
+  const time = roundToNearestTime(data.get("createdTime"), 5);
   return data.assign({
-    userID: data.get("userPrincipalName").encodeLabels().cast(new Uint32()),
-    time: roundToNearestTime(data.get("createdTime"), 5)
-      ._castAsString()
-      .encodeLabels()
-      .cast(new Uint32()),
-    elevation: data.get("time"),
+    time: time._castAsString().encodeLabels().cast(new Uint32()),
+    time_: time,
     userPrincipalName: data
       .get("userPrincipalName")
       .pad(12, "right", " ")

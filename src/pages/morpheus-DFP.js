@@ -105,7 +105,12 @@ export default class CustomD3 extends React.Component {
 
   async loadData(time) {
     const timeNow = +new Date();
-    const data = await requestJSON("getEventStats", this.appendPayload(time));
+    const data = await requestJSON(
+      "getEventStats",
+      `${this.appendPayload(time)}&anomalyThreshold=${
+        this.state.AppSettings.anomalousColorThreshold[1]
+      }`
+    );
     const elevation = await requestData(
       "getDFElevation",
       this.appendPayload(time)
@@ -129,9 +134,11 @@ export default class CustomD3 extends React.Component {
       colors: colors,
       userIDs: userIDs,
       anomalousEvents: this.state.anomalousEvents.concat([
-        [timeNow, data.totalAnomalousEvents],
+        [new Date(data.time), data.totalAnomalousEvents],
       ]),
-      totalEvents: this.state.totalEvents.concat([[timeNow, data.totalEvents]]),
+      totalEvents: this.state.totalEvents.concat([
+        [new Date(data.time), data.totalEvents],
+      ]),
       selectedEvent: {
         ...this.state.selectedEvent,
         instanceId: parseInt(gridBasedInstanceID.index),
@@ -151,7 +158,7 @@ export default class CustomD3 extends React.Component {
     });
 
     for (
-      let i = totalTime - this.state.AppSettings.lookBackTime;
+      let i = 50; // totalTime - this.state.AppSettings.lookBackTime;
       i <= totalTime;
       i += 1
     ) {
