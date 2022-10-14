@@ -353,9 +353,9 @@ export function gridBasedClickIndex(
     .getValue(0);
 
   if (selectedUserID == 0) {
-    return orderselectedUserID + totalUsers * selectedGridTime; // instanceID
+    return orderselectedUserID + totalUsers * selectedGridTime - totalUsers; // instanceID
   }
-  return orderselectedUserID + totalUsers * selectedGridTime - totalUsers; // instanceID
+  return orderselectedUserID + totalUsers * selectedGridTime; // instanceID
 }
 
 export function generateData(
