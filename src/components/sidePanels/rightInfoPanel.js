@@ -201,7 +201,7 @@ function SidePanel({ allEvents, anomalousColorThreshold, dataset }) {
                     : selectedEventData[attr]}
                 </span>
                 <Ruler
-                  mean={selectedEventData[attr + "_score_mean"]}
+                  mean={selectedEventData[attr + "_score_scaled"]}
                   score={selectedEventData[attr + "_score"]}
                 />
               </span>

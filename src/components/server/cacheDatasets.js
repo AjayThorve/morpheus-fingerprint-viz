@@ -13,7 +13,12 @@
 // limitations under the License.
 
 import { roundToNearestTime } from "./utils";
-const { DataFrame, Uint32, TimestampSecond } = require("@rapidsai/cudf");
+const {
+  DataFrame,
+  Uint32,
+  TimestampSecond,
+  Series,
+} = require("@rapidsai/cudf");
 const path = require("path");
 
 module.exports = () => {
@@ -46,18 +51,32 @@ module.exports = () => {
 async function readDataset(datasets, datasetName) {
   let fn = DataFrame.readParquet;
   datasetName = path.join(process.env.dataset_path, datasetName);
-  if (path.extname(datasetName) == "csv") {
+  if (path.extname(datasetName) == ".csv") {
     fn = DataFrame.readCSV;
   }
+
   let data = fn({
     sourceType: "files",
     sources: [datasetName],
   });
 
+  const attrs = data.drop(["user", "time"]).names;
+  attrs.forEach((attr) => {
+    const attr_mean = data
+      .get(attr)
+      .sub(data.get(attr).min())
+      // using 95th percentile score to compute scaled values
+      .div(data.get(attr).quantile(0.95, "linear") - data.get(attr).min());
+    data = data.assign({
+      [`${attr}_scaled`]: attr_mean,
+    });
+  });
+
   data = data
     .assign({
-      userID: data.get("userPrincipalName").encodeLabels().cast(new Uint32()),
-      time: data.get("createdTime").cast(new TimestampSecond()),
+      userID: data.get("user").encodeLabels().cast(new Uint32()),
+      createdTime: data.get("time"),
+      time: data.get("time").cast(new TimestampSecond()),
     })
     .sortValues({ time: { ascending: true } });
   const time = roundToNearestTime(data.get("createdTime"), 5);
@@ -65,8 +84,14 @@ async function readDataset(datasets, datasetName) {
     time: time._castAsString().encodeLabels().cast(new Uint32()),
     time_: time,
     userPrincipalName: data
-      .get("userPrincipalName")
+      .get("user")
       .pad(12, "right", " ")
       .pad(13, "right", "\n"),
+    index: Series.sequence({
+      size: data.numRows,
+      init: 0,
+      dtype: new Uint32(),
+      step: 1,
+    }),
   });
 }
