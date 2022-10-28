@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import { List } from "react-bootstrap-icons";
 import CloseButton from "react-bootstrap/CloseButton";
@@ -21,6 +21,7 @@ import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import Form from "react-bootstrap/Form";
 import styles from "../../styles/components/sidePanels.module.css";
+import { ArrowClockwise } from "react-bootstrap-icons";
 
 const handleStyle = {
   borderColor: "white",
@@ -40,8 +41,23 @@ const railStyle = {
   height: 10,
 };
 
+async function requestJSON(type = "getFiles", params = null) {
+  let url = `/api/${type}`;
+  if (params != null) {
+    url += `${params}`;
+  }
+  return await fetch(url, {
+    method: "GET",
+    headers: { "Access-Control-Allow-Origin": "*" },
+  })
+    .then((res) => res.json())
+    .catch((e) => console.log(e));
+}
+
 function ConfigPanel({ config, updateConfig }) {
   const [show, setShow] = useState(false);
+  const [datasets, setDatasets] = useState([]);
+  const [reload, clickReload] = useState(false);
   const [configValues, setConfigValues] = useState({
     colorThreshold: config.anomalousColorThreshold.map((x) => x * 100),
     visibleUsers: [config.visibleUsers.value],
@@ -51,7 +67,24 @@ function ConfigPanel({ config, updateConfig }) {
     lookBackTime: [config.lookBackTime], //seconds
     lookBackTimeRange: eval(process.env.NEXT_PUBLIC_look_back_time_range),
     timePerHexRange: eval(process.env.NEXT_PUBLIC_time_bin_per_hex_range),
+    currentDataset: config.currentDataset,
   });
+
+  useEffect(() => {
+    const fetchFiles = async () => {
+      const datasets = await requestJSON("getFiles");
+      setDatasets(datasets);
+      console.log(datasets);
+      setConfigValues((c) => {
+        return { ...c, currentDataset: datasets[0] };
+      });
+    };
+    fetchFiles();
+  }, [reload]);
+
+  const refreshDatasets = () => {
+    clickReload(!reload);
+  };
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
@@ -76,6 +109,33 @@ function ConfigPanel({ config, updateConfig }) {
         <br></br>
 
         <ListGroup>
+          <ListGroup.Item className={styles.listOfAttributes} key={"datasets"}>
+            <div className={styles.configTitle}>
+              Current Dataset
+              <a href="#" onClick={refreshDatasets}>
+                <ArrowClockwise></ArrowClockwise>
+              </a>
+            </div>
+            <select
+              name="sortEvents"
+              className={styles.configTools}
+              value={config.currentDataset}
+              onChange={(e) => {
+                updateConfig("currentDataset", e.target.value);
+              }}
+            >
+              {datasets.map((dataset, i) => {
+                return (
+                  <option value={dataset} key={dataset}>
+                    {dataset}
+                  </option>
+                );
+              })}
+            </select>
+          </ListGroup.Item>
+          <br></br>
+          <br></br>
+
           <ListGroup.Item
             className={styles.listOfAttributes}
             key={"sortUpdates"}
@@ -91,6 +151,7 @@ function ConfigPanel({ config, updateConfig }) {
             />
           </ListGroup.Item>
           <br></br>
+
           <ListGroup.Item className={styles.listOfAttributes} key={"sort"}>
             <div className={styles.configTitle}>Sort By (Highest on Top)</div>
             <select

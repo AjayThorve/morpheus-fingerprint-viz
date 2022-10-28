@@ -20,8 +20,8 @@ import Ruler from "../ruler";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import styles from "../../styles/components/sidePanels.module.css";
 
-async function requestJSON(type = "getEventByIndex", params = null) {
-  let url = `/api/${type}?dataset=interesting-users-34-enriched.parquet&`;
+async function requestJSON(type = "getEventByIndex", dataset, params = null) {
+  let url = `/api/${type}?dataset=${dataset}&`;
   if (params != null) {
     url += `${params}`;
   }
@@ -40,7 +40,7 @@ function getColorPaletteStyle(threshold) {
   )`;
 }
 
-function SidePanel({ allEvents, anomalousColorThreshold }) {
+function SidePanel({ allEvents, anomalousColorThreshold, dataset }) {
   const [selectedEvent, setSelectedEvent] = useState("");
   const [selectedEventData, setSelectedEventData] = useState({});
   const [show, setShow] = useState(false);
@@ -48,14 +48,17 @@ function SidePanel({ allEvents, anomalousColorThreshold }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      const result = await requestJSON(
-        "getEventByIndex",
-        `index=${selectedEvent}`
-      );
-      setSelectedEventData(result.result[0]);
+      if (dataset !== "") {
+        const result = await requestJSON(
+          "getEventByIndex",
+          dataset,
+          `index=${selectedEvent}`
+        );
+        setSelectedEventData(result.result[0]);
+      }
     };
     fetchData().catch((e) => console.log(e));
-  }, [selectedEvent]);
+  }, [selectedEvent, dataset]);
 
   useEffect(() => {
     if (allEvents.length > 0) {

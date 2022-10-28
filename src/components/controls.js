@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* eslint-disable react/no-unknown-property */
+
 import React, { useRef } from "react";
 import { extend, useFrame, useThree } from "@react-three/fiber";
 

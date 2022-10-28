@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* eslint-disable react/no-unknown-property */
+
 import React from "react";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
@@ -20,8 +22,8 @@ import { Text } from "@react-three/drei";
 import TimeAxis3D from "./timeAxis3D";
 import styles from "../styles/components/hexgrid.module.css";
 
-async function requestJSON(type = "getInstances", params = null) {
-  let url = `/api/${type}?dataset=interesting-users-34-enriched.parquet&`;
+async function requestJSON(type = "getInstances", dataset, params = null) {
+  let url = `/api/${type}?dataset=${dataset}&`;
   if (params != null) {
     url += `${params}`;
   }
@@ -150,6 +152,7 @@ class HexGrid extends React.Component {
             if (id !== this.props.selectedEvent.instanceId) {
               const result = await requestJSON(
                 "getInstances",
+                this.props.currentDataset,
                 `time=${this.props.currentTime}&id=${id}&sort=${this.props.appSettings.sort}&sortBy=${this.props.appSettings.sortBy}`
               );
               this.props.setEvents(result["result"]);
@@ -254,22 +257,28 @@ export default class HexGrid3d extends React.Component {
           <directionalLight position={[300, 1, 1]} color={0xffffff} />
           <directionalLight position={[1, 200, 1]} color={0xffffff} />
 
-          <HexGrid
-            currentTime={this.props.currentTime}
-            apiURL={this.props.apiURL}
-            waitTime={this.props.waitTime}
-            hexRadius={20}
-            position={this.props.position}
-            colors={this.props.colors}
-            userIDs={this.props.userIDs}
-            setEvents={this.props.setEvents}
-            setSelectedEvent={this.props.setSelectedEvent}
-            selectedEvent={this.props.selectedEvent}
-            resetSelected={this.props.resetSelected}
-            setLoadingIndicator={this.props.setLoadingIndicator}
-            appSettings={this.props.appSettings}
-            timestamps={this.props.timestamps}
-          />
+          {this.props.currentDataset != "" ? (
+            <HexGrid
+              currentTime={this.props.currentTime}
+              apiURL={this.props.apiURL}
+              waitTime={this.props.waitTime}
+              hexRadius={20}
+              position={this.props.position}
+              colors={this.props.colors}
+              userIDs={this.props.userIDs}
+              setEvents={this.props.setEvents}
+              setSelectedEvent={this.props.setSelectedEvent}
+              selectedEvent={this.props.selectedEvent}
+              resetSelected={this.props.resetSelected}
+              setLoadingIndicator={this.props.setLoadingIndicator}
+              appSettings={this.props.appSettings}
+              timestamps={this.props.timestamps}
+              currentDataset={this.props.currentDataset}
+            />
+          ) : (
+            <></>
+          )}
+
           <MapControls
             makeDefault
             screenSpacePanning={true}

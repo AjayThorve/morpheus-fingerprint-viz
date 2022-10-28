@@ -24,8 +24,8 @@ import SidePanel from "../components/sidePanels/rightInfoPanel";
 import ConfigPanel from "../components/sidePanels/leftConfigPanel";
 import styles from "../styles/DFS-3d.module.css";
 
-async function requestJSON(type = "getEventStats", params = null) {
-  let url = `/api/${type}?dataset=interesting-users-34-enriched.parquet&`;
+async function requestJSON(type = "getEventStats", dataset, params = null) {
+  let url = `/api/${type}?dataset=${dataset}&`;
   if (params != null) {
     url += `${params}`;
   }
@@ -37,8 +37,8 @@ async function requestJSON(type = "getEventStats", params = null) {
     .catch((e) => console.log(e));
 }
 
-async function requestData(type = "getDF", params = null) {
-  let url = `/api/${type}?dataset=interesting-users-34-enriched.parquet&`;
+async function requestData(type = "getDF", dataset, params = null) {
+  let url = `/api/${type}?dataset=${dataset}&`;
   if (params != null) {
     url += `${params}`;
   }
@@ -68,6 +68,7 @@ export default class CustomD3 extends React.Component {
     this.loadData = this.loadData.bind(this);
     this.setEvents = this.setEvents.bind(this);
     this.setSelectedEvent = this.setSelectedEvent.bind(this);
+    this.resetTimeline = this.resetTimeline.bind(this);
     this.offsetX = 200;
     this.offsetY = 100;
     this.hexRadius = 20;
@@ -78,6 +79,8 @@ export default class CustomD3 extends React.Component {
       selectedInstance: -1,
       allEvents: [],
       currentTime: 0,
+      totalTime: 0,
+      play: false,
       position: null,
       timestamps: [],
       colors: null,
@@ -85,6 +88,7 @@ export default class CustomD3 extends React.Component {
       totalEvents: [],
       anomalousEvents: [],
       AppSettings: {
+        currentDataset: "",
         sort: true,
         sortBy: "sum",
         anomalousColorThreshold: eval(
@@ -113,27 +117,36 @@ export default class CustomD3 extends React.Component {
   async loadData(time) {
     const data = await requestJSON(
       "getEventStats",
+      this.state.AppSettings.currentDataset,
       `${this.appendPayload(time)}&anomalyThreshold=${
         this.state.AppSettings.anomalousColorThreshold[1]
       }`
     );
     const elevation = await requestData(
       "getDFElevation",
+      this.state.AppSettings.currentDataset,
       this.appendPayload(time)
     );
     const colors = await requestData(
       "getDFColors",
+      this.state.AppSettings.currentDataset,
       `${this.appendPayload(time)}&colorThreshold=${
         this.state.AppSettings.anomalousColorThreshold
       }`
     );
     const timestamps = await requestJSON(
       "getTimeStamps",
+      this.state.AppSettings.currentDataset,
       this.appendPayload(time)
     );
-    const userIDs = await requestData("getUniqueIDs", this.appendPayload(time));
+    const userIDs = await requestData(
+      "getUniqueIDs",
+      this.state.AppSettings.currentDataset,
+      this.appendPayload(time)
+    );
     const gridBasedInstanceID = await requestJSON(
       "getGridBasedClickIndex",
+      this.state.AppSettings.currentDataset,
       `${this.appendPayload(time)}&selectedEventUserID=${
         this.state.selectedEvent.userID
       }&selectedEventTime=${this.state.selectedEvent.time}`
@@ -156,29 +169,48 @@ export default class CustomD3 extends React.Component {
       timestamps: timestamps.timeStamps,
     });
   }
-  async componentDidMount() {
-    const totalTime = parseInt(await requestJSON("getTotalTime"));
-    const numUsers = await requestJSON("getNumUsers");
-    const visibleUsers = {
-      min: this.state.AppSettings.visibleUsers.min,
-      max: numUsers.numUsers,
-      value: Math.min(100, numUsers.numUsers),
-    };
-    this.setState({
-      AppSettings: { ...this.state.AppSettings, visibleUsers },
-    });
 
-    for (
-      let i = 50; // totalTime - this.state.AppSettings.lookBackTime;
-      i <= totalTime;
-      i += 1
+  async componentDidUpdate(prevProps, prevState) {
+    if (
+      prevState.AppSettings.currentDataset !==
+      this.state.AppSettings.currentDataset
     ) {
-      await this.loadData(i);
+      const totalTime = parseInt(
+        await requestJSON("getTotalTime", this.state.AppSettings.currentDataset)
+      );
+      const numUsers = await requestJSON(
+        "getNumUsers",
+        this.state.AppSettings.currentDataset
+      );
+      const visibleUsers = {
+        min: this.state.AppSettings.visibleUsers.min,
+        max: numUsers.numUsers,
+        value: Math.min(100, numUsers.numUsers),
+      };
       this.setState({
-        currentTime: i,
+        AppSettings: { ...this.state.AppSettings, visibleUsers },
+        currentTime: 0,
+        totalTime: totalTime,
       });
+    }
+    if (
+      prevState.currentTime != this.state.currentTime &&
+      this.state.currentTime <= this.state.totalTime
+    ) {
+      await this.loadData(this.state.currentTime);
+      if (this.state.play) {
+        this.setState({
+          currentTime: this.state.currentTime + 1,
+        });
+      }
       await timeout(this.waitTime); //for 5 sec delay
     }
+  }
+
+  resetTimeline() {
+    this.setState({
+      currentTime: 0,
+    });
   }
 
   resetSelected() {
@@ -224,6 +256,10 @@ export default class CustomD3 extends React.Component {
         [key]: value,
       },
     });
+
+    if (key == "currentDataset") {
+      console.log("dataset updated to", value);
+    }
   }
 
   render() {
@@ -279,6 +315,7 @@ export default class CustomD3 extends React.Component {
             appSettings={this.state.AppSettings}
             setLoadingIndicator={this.setLoadingIndicator}
             timestamps={this.state.timestamps}
+            currentDataset={this.state.AppSettings.currentDataset}
           />
 
           <SidePanel
@@ -286,6 +323,7 @@ export default class CustomD3 extends React.Component {
             anomalousColorThreshold={
               this.state.AppSettings.anomalousColorThreshold
             }
+            dataset={this.state.AppSettings.currentDataset}
           ></SidePanel>
         </div>
       </div>
