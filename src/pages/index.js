@@ -24,8 +24,8 @@ import SidePanel from "../components/sidePanels/rightInfoPanel";
 import ConfigPanel from "../components/sidePanels/leftConfigPanel";
 import styles from "../styles/DFS-3d.module.css";
 
-async function requestJSON(type = "getEventStats", dataset, params = null) {
-  let url = `/api/${type}?dataset=${dataset}&`;
+async function requestJSON(type = "getEventStats", params = null) {
+  let url = `/api/${type}?`;
   if (params != null) {
     url += `${params}`;
   }
@@ -37,8 +37,8 @@ async function requestJSON(type = "getEventStats", dataset, params = null) {
     .catch((e) => console.log(e));
 }
 
-async function requestData(type = "getDF", dataset, params = null) {
-  let url = `/api/${type}?dataset=${dataset}&`;
+async function requestData(type = "getDF", params = null) {
+  let url = `/api/${type}?`;
   if (params != null) {
     url += `${params}`;
   }
@@ -48,10 +48,6 @@ async function requestData(type = "getDF", dataset, params = null) {
   });
   const table = tableFromIPC(result);
   return table;
-}
-
-function timeout(delay) {
-  return new Promise((res) => setTimeout(res, delay));
 }
 
 export default class CustomD3 extends React.Component {
@@ -105,45 +101,29 @@ export default class CustomD3 extends React.Component {
       notifications: "",
       loading: false,
     };
-    this.waitTime = 4000;
   }
 
   appendPayload() {
-    return `sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}&numUsers=${this.state.AppSettings.visibleUsers.value}&lookBackTime=${this.state.AppSettings.lookBackTime}`;
+    return `dataset=${this.state.AppSettings.currentDataset}&sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}&numUsers=${this.state.AppSettings.visibleUsers.value}&lookBackTime=${this.state.AppSettings.lookBackTime}`;
   }
 
   async loadData() {
     const data = await requestJSON(
       "getEventStats",
-      this.state.AppSettings.currentDataset,
       `${this.appendPayload()}&anomalyThreshold=${
         this.state.AppSettings.anomalousColorThreshold[1]
       }`
     );
-    const elevation = await requestData(
-      "getDFElevation",
-      this.state.AppSettings.currentDataset,
-      this.appendPayload()
-    );
+    const elevation = await requestData("getDFElevation", this.appendPayload());
 
-    console.log(elevation);
     const colors = await requestData(
       "getDFColors",
-      this.state.AppSettings.currentDataset,
       `${this.appendPayload()}&colorThreshold=${
         this.state.AppSettings.anomalousColorThreshold
       }`
     );
-    const timestamps = await requestJSON(
-      "getTimeStamps",
-      this.state.AppSettings.currentDataset,
-      this.appendPayload()
-    );
-    const userIDs = await requestData(
-      "getUniqueIDs",
-      this.state.AppSettings.currentDataset,
-      this.appendPayload()
-    );
+    const timestamps = await requestJSON("getTimeStamps", this.appendPayload());
+    const userIDs = await requestData("getUniqueIDs", this.appendPayload());
 
     this.setState({
       position: elevation.batches[0].data.children[0].values,
@@ -171,11 +151,14 @@ export default class CustomD3 extends React.Component {
       this.state.AppSettings.currentDataset
     ) {
       const totalTime = parseInt(
-        await requestJSON("getTotalTime", this.state.AppSettings.currentDataset)
+        await requestJSON(
+          "getTotalTime",
+          `dataset=${this.state.AppSettings.currentDataset}`
+        )
       );
       const numUsers = await requestJSON(
         "getNumUsers",
-        this.state.AppSettings.currentDataset
+        `dataset=${this.state.AppSettings.currentDataset}`
       );
       const visibleUsers = {
         min: this.state.AppSettings.visibleUsers.min,
@@ -278,8 +261,6 @@ export default class CustomD3 extends React.Component {
         </div>
         <div id={styles.hexgrid}>
           <HexGrid3d
-            apiURL={"three"}
-            waitTime={this.waitTime}
             position={this.state.position}
             colors={this.state.colors}
             userIDs={this.state.userIDs}
