@@ -19,20 +19,13 @@ import runMiddleware from "../../components/server/runMiddleware";
 export default async function handler(req, res) {
   const datasetName = req.query.dataset;
   await runMiddleware(datasetName, req, res, cache);
-  const time = req.query.time
-    ? parseInt(req.query.time)
-    : req[datasetName].get("time").min();
   const id = req.query.id ? parseInt(req.query.id) : -1;
   const sort = req.query.sort ? req.query.sort === "true" : false;
   const sortBy = req.query.sortBy ? req.query.sortBy : "sum";
 
-  const tempData = req[datasetName].filter(
-    req[datasetName].get("time").le(time)
-  );
-
   if (id >= 0) {
     res.send({
-      result: getInstances(req[datasetName], id, tempData, sort, sortBy)
+      result: getInstances(req[datasetName], id, sort, sortBy)
         .toArrow()
         .toArray(),
     });

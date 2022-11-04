@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { Series } from "@rapidsai/cudf";
+
 const path = require("path");
 const fs = require("fs");
 
@@ -27,6 +29,6 @@ export default function handler(req, res) {
         fileNames.push(file);
       }
     });
-    res.send(fileNames);
+    res.send([...Series.new(fileNames).sortValues(false)]);
   });
 }

@@ -18,19 +18,18 @@ import runMiddleware from "../../components/server/runMiddleware";
 export default async function handler(req, res) {
   const datasetName = req.query.dataset;
   await runMiddleware(datasetName, req, res, cache);
-  const time = req.query.time
-    ? parseInt(req.query.time)
-    : req[datasetName].get("time").min();
-  const events = req[datasetName].filter(req[datasetName].get("time").eq(time));
+  const time = req[datasetName].get("time").max();
   const anomalyThreshold = req.query.anomalyThreshold
     ? parseFloat(req.query.anomalyThreshold)
     : 0.385;
 
   res.send({
-    totalEvents: events.numRows - events.get("anomaly_score").nullCount,
-    totalAnomalousEvents: events.filter(
-      events.get("anomaly_score").ge(anomalyThreshold)
+    totalEvents:
+      req[datasetName].numRows -
+      req[datasetName].get("anomaly_score").nullCount,
+    totalAnomalousEvents: req[datasetName].filter(
+      req[datasetName].get("anomaly_score").ge(anomalyThreshold)
     ).numRows,
-    time: events.get("createdTime").getValue(0),
+    time: req[datasetName].get("createdTime").getValue(0),
   });
 }

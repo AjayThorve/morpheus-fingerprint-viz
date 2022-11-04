@@ -85,14 +85,6 @@ export function mapValuesToColorSeries(
       color_b.setValues(indices, color.b);
     }
   }
-  // handle nulls
-  if (values.countNonNulls() !== values.length) {
-    // contains null values
-    const indices = colorIndices.filter(values.isNull());
-    color_r.setValues(indices, nullColor.r / 255);
-    color_g.setValues(indices, nullColor.g / 255);
-    color_b.setValues(indices, nullColor.b / 255);
-  }
 
   return { color_r, color_g, color_b };
 }

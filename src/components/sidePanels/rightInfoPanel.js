@@ -54,7 +54,10 @@ function SidePanel({ allEvents, anomalousColorThreshold, dataset }) {
           dataset,
           `index=${selectedEvent}`
         );
-        setSelectedEventData(result.result[0]);
+        console.log(result);
+        if (result.result) {
+          setSelectedEventData(result.result[0]);
+        }
       }
     };
     fetchData().catch((e) => console.log(e));
@@ -159,7 +162,7 @@ function SidePanel({ allEvents, anomalousColorThreshold, dataset }) {
               />
             </a>
           </div>
-          {["userPrincipalName", "time", "anomaly_score"].map((attr) => (
+          {["user", "time", "anomaly_score"].map((attr) => (
             <ListGroup.Item
               className={styles.listOfAttributes}
               variant="dark"
@@ -172,9 +175,15 @@ function SidePanel({ allEvents, anomalousColorThreshold, dataset }) {
                     color: attr == "anomaly_score" ? "#b95422" : "#f2f2f2",
                   }}
                 >
-                  {attr == "anomaly_score"
-                    ? parseFloat(selectedEventData[attr]).toFixed(3)
-                    : selectedEventData[attr]}
+                  {selectedEventData ? (
+                    attr == "anomaly_score" ? (
+                      parseFloat(selectedEventData[attr]).toFixed(3)
+                    ) : (
+                      selectedEventData[attr]
+                    )
+                  ) : (
+                    <></>
+                  )}
                 </span>
               </span>
             </ListGroup.Item>
@@ -196,13 +205,25 @@ function SidePanel({ allEvents, anomalousColorThreshold, dataset }) {
               <span className={styles.selectedEventTitle}>
                 {attr}:{" "}
                 <span className={styles.selectedEvent}>
-                  {attr == "anomaly_score"
-                    ? parseFloat(selectedEventData[attr]).toFixed(3)
-                    : selectedEventData[attr]}
+                  {selectedEventData ? (
+                    attr == "anomaly_score" ? (
+                      parseFloat(selectedEventData[attr]).toFixed(3)
+                    ) : (
+                      selectedEventData[attr]
+                    )
+                  ) : (
+                    <></>
+                  )}
                 </span>
                 <Ruler
-                  mean={selectedEventData[attr + "_score_scaled"]}
-                  score={selectedEventData[attr + "_score"]}
+                  mean={
+                    selectedEventData
+                      ? selectedEventData[attr + "_score_scaled"]
+                      : 0
+                  }
+                  score={
+                    selectedEventData ? selectedEventData[attr + "_score"] : 0
+                  }
                 />
               </span>
               <br></br>

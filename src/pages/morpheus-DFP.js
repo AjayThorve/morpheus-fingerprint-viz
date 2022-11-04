@@ -18,7 +18,7 @@ import Spinner from "react-bootstrap/Spinner";
 import React from "react";
 import { tableFromIPC } from "apache-arrow";
 import Image from "next/image";
-import HexGrid3d from "../components/hexgrid-3d";
+import { HexGrid3d } from "../components/hexgrid-3d";
 import AreaChart from "../components/area";
 import SidePanel from "../components/sidePanels/rightInfoPanel";
 import ConfigPanel from "../components/sidePanels/leftConfigPanel";
@@ -68,7 +68,6 @@ export default class CustomD3 extends React.Component {
     this.loadData = this.loadData.bind(this);
     this.setEvents = this.setEvents.bind(this);
     this.setSelectedEvent = this.setSelectedEvent.bind(this);
-    this.resetTimeline = this.resetTimeline.bind(this);
     this.offsetX = 200;
     this.offsetY = 100;
     this.hexRadius = 20;
@@ -78,13 +77,12 @@ export default class CustomD3 extends React.Component {
       selectedEvent: { userID: -1, time: -1 },
       selectedInstance: -1,
       allEvents: [],
-      currentTime: 0,
       totalTime: 0,
-      play: false,
-      position: null,
+      play: true,
+      position: new Float32Array(),
       timestamps: [],
-      colors: null,
-      userIDs: [],
+      colors: new Float32Array(),
+      userIDs: new Float32Array(),
       totalEvents: [],
       anomalousEvents: [],
       AppSettings: {
@@ -110,52 +108,49 @@ export default class CustomD3 extends React.Component {
     this.waitTime = 4000;
   }
 
-  appendPayload(time) {
-    return `time=${time}&sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}&numUsers=${this.state.AppSettings.visibleUsers.value}&lookBackTime=${this.state.AppSettings.lookBackTime}`;
+  appendPayload() {
+    return `sort=${this.state.AppSettings.sort}&sortBy=${this.state.AppSettings.sortBy}&numUsers=${this.state.AppSettings.visibleUsers.value}&lookBackTime=${this.state.AppSettings.lookBackTime}`;
   }
 
-  async loadData(time) {
+  async loadData() {
     const data = await requestJSON(
       "getEventStats",
       this.state.AppSettings.currentDataset,
-      `${this.appendPayload(time)}&anomalyThreshold=${
+      `${this.appendPayload()}&anomalyThreshold=${
         this.state.AppSettings.anomalousColorThreshold[1]
       }`
     );
     const elevation = await requestData(
       "getDFElevation",
       this.state.AppSettings.currentDataset,
-      this.appendPayload(time)
+      this.appendPayload()
     );
+
+    console.log(elevation);
     const colors = await requestData(
       "getDFColors",
       this.state.AppSettings.currentDataset,
-      `${this.appendPayload(time)}&colorThreshold=${
+      `${this.appendPayload()}&colorThreshold=${
         this.state.AppSettings.anomalousColorThreshold
       }`
     );
     const timestamps = await requestJSON(
       "getTimeStamps",
       this.state.AppSettings.currentDataset,
-      this.appendPayload(time)
+      this.appendPayload()
     );
     const userIDs = await requestData(
       "getUniqueIDs",
       this.state.AppSettings.currentDataset,
-      this.appendPayload(time)
-    );
-    const gridBasedInstanceID = await requestJSON(
-      "getGridBasedClickIndex",
-      this.state.AppSettings.currentDataset,
-      `${this.appendPayload(time)}&selectedEventUserID=${
-        this.state.selectedEvent.userID
-      }&selectedEventTime=${this.state.selectedEvent.time}`
+      this.appendPayload()
     );
 
     this.setState({
-      position: elevation,
-      colors: colors,
-      userIDs: userIDs,
+      position: elevation.batches[0].data.children[0].values,
+      colors: colors.batches[0].data.children[0].values,
+      userIDs: new TextDecoder().decode(
+        userIDs.batches[0].data.children[0].values
+      ),
       anomalousEvents: this.state.anomalousEvents.concat([
         [new Date(data.time), data.totalAnomalousEvents],
       ]),
@@ -164,7 +159,7 @@ export default class CustomD3 extends React.Component {
       ]),
       selectedEvent: {
         ...this.state.selectedEvent,
-        instanceId: parseInt(gridBasedInstanceID.index),
+        instanceId: -1,
       },
       timestamps: timestamps.timeStamps,
     });
@@ -189,28 +184,9 @@ export default class CustomD3 extends React.Component {
       };
       this.setState({
         AppSettings: { ...this.state.AppSettings, visibleUsers },
-        currentTime: 0,
-        totalTime: totalTime,
       });
+      await this.loadData(totalTime);
     }
-    if (
-      prevState.currentTime != this.state.currentTime &&
-      this.state.currentTime <= this.state.totalTime
-    ) {
-      await this.loadData(this.state.currentTime);
-      if (this.state.play) {
-        this.setState({
-          currentTime: this.state.currentTime + 1,
-        });
-      }
-      await timeout(this.waitTime); //for 5 sec delay
-    }
-  }
-
-  resetTimeline() {
-    this.setState({
-      currentTime: 0,
-    });
   }
 
   resetSelected() {
@@ -304,7 +280,6 @@ export default class CustomD3 extends React.Component {
           <HexGrid3d
             apiURL={"three"}
             waitTime={this.waitTime}
-            currentTime={this.state.currentTime}
             position={this.state.position}
             colors={this.state.colors}
             userIDs={this.state.userIDs}

@@ -78,15 +78,15 @@ async function readDataset(datasets, datasetName) {
       createdTime: data.get("time"),
       time: data.get("time").cast(new TimestampSecond()),
     })
+    .rename({
+      anomalyScore_scaled: "anomaly_score",
+    })
     .sortValues({ time: { ascending: true } });
   const time = roundToNearestTime(data.get("createdTime"), 5);
   return data.assign({
     time: time._castAsString().encodeLabels().cast(new Uint32()),
     time_: time,
-    userPrincipalName: data
-      .get("user")
-      .pad(12, "right", " ")
-      .pad(13, "right", "\n"),
+    userPrincipalName: data.get("user").replaceSlice(" \n", -3, -1),
     index: Series.sequence({
       size: data.numRows,
       init: 0,

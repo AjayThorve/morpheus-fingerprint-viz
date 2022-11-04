@@ -37,7 +37,7 @@
 
 .listOfAttributes {
   background-color: #0f0f0f !important;
-  padding: 0px !important;
+  padding: 20px 0px !important;
   border: none;
 }
 
@@ -80,7 +80,7 @@
   background-color: #333;
   color: white;
   width: 90%;
-  margin-left: 5%;
+  margin: 0px 5%;
 }
 
 #configPanel {

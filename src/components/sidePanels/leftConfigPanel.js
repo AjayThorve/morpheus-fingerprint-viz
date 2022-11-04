@@ -74,13 +74,13 @@ function ConfigPanel({ config, updateConfig }) {
     const fetchFiles = async () => {
       const datasets = await requestJSON("getFiles");
       setDatasets(datasets);
-      console.log(datasets);
       setConfigValues((c) => {
         return { ...c, currentDataset: datasets[0] };
       });
+      updateConfig("currentDataset", datasets[0]);
     };
     fetchFiles();
-  }, [reload]);
+  }, [reload, updateConfig]);
 
   const refreshDatasets = () => {
     clickReload(!reload);
@@ -106,7 +106,6 @@ function ConfigPanel({ config, updateConfig }) {
           <Offcanvas.Title>Settings</Offcanvas.Title>
           <CloseButton variant="white" onClick={() => setShow(false)} />
         </Offcanvas.Header>
-        <br></br>
 
         <ListGroup>
           <ListGroup.Item className={styles.listOfAttributes} key={"datasets"}>
@@ -133,24 +132,6 @@ function ConfigPanel({ config, updateConfig }) {
               })}
             </select>
           </ListGroup.Item>
-          <br></br>
-          <br></br>
-
-          <ListGroup.Item
-            className={styles.listOfAttributes}
-            key={"sortUpdates"}
-          >
-            <div className={styles.configTitle}>Live sort Updates</div>
-            <Form.Switch
-              className={`${styles.configSwitch} configSwitch`}
-              checked={config.sort}
-              onChange={(e) => {
-                updateConfig("sort", e.target.checked);
-              }}
-              label={config.sort ? "on" : "off"}
-            />
-          </ListGroup.Item>
-          <br></br>
 
           <ListGroup.Item className={styles.listOfAttributes} key={"sort"}>
             <div className={styles.configTitle}>Sort By (Highest on Top)</div>
@@ -169,8 +150,6 @@ function ConfigPanel({ config, updateConfig }) {
               <option value={"count"}>No. of Events</option>
             </select>
           </ListGroup.Item>
-          <br></br>
-          <br></br>
 
           <ListGroup.Item
             className={styles.listOfAttributes}
@@ -209,8 +188,6 @@ function ConfigPanel({ config, updateConfig }) {
               }}
             />
           </ListGroup.Item>
-          <br></br>
-          <br></br>
           <ListGroup.Item
             className={styles.listOfAttributes}
             key={"visibleUsers"}
@@ -241,7 +218,6 @@ function ConfigPanel({ config, updateConfig }) {
               }}
             />
           </ListGroup.Item>
-          <br></br>
           {/* <ListGroup.Item
             className={styles.listOfAttributes}
             key={"sortFrequency"}
@@ -296,7 +272,6 @@ function ConfigPanel({ config, updateConfig }) {
             />
           </ListGroup.Item>
           <br></br>*/}
-          <br></br>
           <ListGroup.Item
             className={styles.listOfAttributes}
             key={"timeBinPerHexagon"}
@@ -324,8 +299,6 @@ function ConfigPanel({ config, updateConfig }) {
               }}
             />
           </ListGroup.Item>
-          <br></br>
-          <br></br>
           <ListGroup.Item
             className={styles.listOfAttributes}
             key={"lookBackTime"}
@@ -353,8 +326,6 @@ function ConfigPanel({ config, updateConfig }) {
               }}
             />
           </ListGroup.Item>
-          <br></br>
-          <br></br>
           <ListGroup.Item
             className={styles.listOfAttributes}
             key={"liveUpdates"}
@@ -369,7 +340,6 @@ function ConfigPanel({ config, updateConfig }) {
               label={config.liveUpdates ? "on" : "off"}
             />
           </ListGroup.Item>
-          <br></br>
           <ListGroup.Item
             className={styles.listOfAttributes}
             key={"3dPerspectiveLock"}

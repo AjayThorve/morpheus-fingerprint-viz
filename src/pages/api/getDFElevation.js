@@ -20,9 +20,7 @@ export default async function handler(req, res) {
   const datasetName = req.query.dataset;
   await runMiddleware(datasetName, req, res, cache);
 
-  const time = req.query.time
-    ? parseInt(req.query.time)
-    : req[datasetName].get("time").max();
+  const time = req[datasetName].get("time").max();
   const sort = req.query.sort ? req.query.sort === "true" : false;
   const sortBy = req.query.sortBy ? req.query.sortBy : "sum";
   const numUsers = req.query.numUsers ? parseInt(req.query.numUsers) : -1;
@@ -30,18 +28,17 @@ export default async function handler(req, res) {
     ? parseInt(req.query.lookBackTime)
     : 20;
   const tempData = req[datasetName].filter(
-    req[datasetName].get("time").le(time)
+    req[datasetName].get("time").gt(time - lookBackTime)
   );
-  sendDF(
-    generateData(
-      req[datasetName],
-      tempData,
-      "elevation",
-      sort,
-      sortBy,
-      numUsers,
-      lookBackTime
-    ),
-    res
+  const result = generateData(
+    req[datasetName],
+    tempData,
+    "elevation",
+    sort,
+    sortBy,
+    numUsers,
+    lookBackTime
   );
+
+  sendDF(result, res);
 }

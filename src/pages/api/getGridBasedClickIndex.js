@@ -37,6 +37,7 @@ export default async function handler(req, res) {
   const tempData = req[datasetName].filter(
     req[datasetName].get("time").le(time)
   );
+  console.log(numUsers);
   res.send({
     index: gridBasedClickIndex(
       req[datasetName],
