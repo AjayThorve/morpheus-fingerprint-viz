@@ -64,6 +64,7 @@ export default class CustomD3 extends React.Component {
     this.loadData = this.loadData.bind(this);
     this.setEvents = this.setEvents.bind(this);
     this.setSelectedEvent = this.setSelectedEvent.bind(this);
+    this.promisedSetState = this.promisedSetState.bind(this);
     this.reload = this.reload.bind(this);
     this.offsetX = 200;
     this.offsetY = 100;
@@ -155,13 +156,11 @@ export default class CustomD3 extends React.Component {
       await this.reload();
     }
   }
+  promisedSetState(newState) {
+    return new Promise((resolve) => this.setState(newState, resolve));
+  }
+
   async reload(config = {}) {
-    this.setState({
-      AppSettings: {
-        ...this.state.AppSettings,
-        ...config,
-      },
-    });
     const numUsers = await requestJSON(
       "getNumUsers",
       `dataset=${this.state.AppSettings.currentDataset}`
@@ -169,9 +168,10 @@ export default class CustomD3 extends React.Component {
     const visibleUsers = {
       min: this.state.AppSettings.visibleUsers.min,
       max: numUsers.numUsers,
-      value: Math.min(100, numUsers.numUsers),
+      value: numUsers.numUsers,
     };
-    this.setState({
+
+    await this.promisedSetState({
       AppSettings: { ...this.state.AppSettings, visibleUsers },
     });
 

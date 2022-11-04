@@ -61,23 +61,19 @@ function ConfigPanel({ config, updateConfig, reloadCharts }) {
   const [reload, clickReload] = useState(false);
   const [configValues, setConfigValues] = useState({
     colorThreshold: config.anomalousColorThreshold.map((x) => x * 100),
-    visibleUsers: [config.visibleUsers.value],
+    visibleUsers: { value: config.visibleUsers.value },
     sortFrequency: [1], //seconds
     updateFrequency: [1], //seconds
     timePerHex: [config.timePerHex], //seconds
     lookBackTime: [config.lookBackTime], //seconds
     lookBackTimeRange: eval(process.env.NEXT_PUBLIC_look_back_time_range),
     timePerHexRange: eval(process.env.NEXT_PUBLIC_time_bin_per_hex_range),
-    currentDataset: config.currentDataset,
   });
 
   useEffect(() => {
     const fetchFiles = async () => {
       const datasets = await requestJSON("getFiles");
       setDatasets(datasets);
-      setConfigValues((c) => {
-        return { ...c, currentDataset: datasets[0] };
-      });
       updateConfig("currentDataset", datasets[0]);
     };
     fetchFiles();
@@ -142,6 +138,9 @@ function ConfigPanel({ config, updateConfig, reloadCharts }) {
               value={config.sortBy}
               onChange={(e) => {
                 updateConfig("sortBy", e.target.value);
+                setConfigValues({
+                  visibleUsers: { value: config.visibleUsers.value },
+                });
               }}
             >
               <option value={"mean"}>Mean Anomalous Score</option>
@@ -200,17 +199,20 @@ function ConfigPanel({ config, updateConfig, reloadCharts }) {
               max={config.visibleUsers.max}
               defaultValue={config.visibleUsers.value}
               onChange={(e) => {
-                setConfigValues({ ...configValues, visibleUsers: e });
+                setConfigValues({
+                  ...configValues,
+                  visibleUsers: { value: e },
+                });
               }}
               handleStyle={handleStyle}
               trackStyle={trackStyle}
               railStyle={railStyle}
               marks={{
-                [configValues.visibleUsers]: {
+                [configValues.visibleUsers.value]: {
                   style: {
                     color: "white",
                   },
-                  label: <span>{configValues.visibleUsers}</span>,
+                  label: <span>{configValues.visibleUsers.value}</span>,
                 },
               }}
             />
@@ -333,7 +335,7 @@ function ConfigPanel({ config, updateConfig, reloadCharts }) {
               size="sm"
               className={styles.configButton}
               onClick={() => {
-                reloadCharts(config);
+                reloadCharts(configValues);
               }}
             >
               Apply
