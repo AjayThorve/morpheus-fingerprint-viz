@@ -28,7 +28,7 @@ yarn build
 yarn start
 ```
 
-Open [http://localhost:3000/morpheus-DFP](http://localhost:3000/morpheus-DFP) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## Application Screenshots
 
