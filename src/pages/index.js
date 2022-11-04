@@ -64,6 +64,7 @@ export default class CustomD3 extends React.Component {
     this.loadData = this.loadData.bind(this);
     this.setEvents = this.setEvents.bind(this);
     this.setSelectedEvent = this.setSelectedEvent.bind(this);
+    this.reload = this.reload.bind(this);
     this.offsetX = 200;
     this.offsetY = 100;
     this.hexRadius = 20;
@@ -73,7 +74,6 @@ export default class CustomD3 extends React.Component {
       selectedEvent: { userID: -1, time: -1 },
       selectedInstance: -1,
       allEvents: [],
-      totalTime: 0,
       play: true,
       position: new Float32Array(),
       timestamps: [],
@@ -147,29 +147,35 @@ export default class CustomD3 extends React.Component {
 
   async componentDidUpdate(prevProps, prevState) {
     if (
+      prevState.AppSettings.currentDataset == "" &&
       prevState.AppSettings.currentDataset !==
-      this.state.AppSettings.currentDataset
+        this.state.AppSettings.currentDataset
     ) {
-      const totalTime = parseInt(
-        await requestJSON(
-          "getTotalTime",
-          `dataset=${this.state.AppSettings.currentDataset}`
-        )
-      );
-      const numUsers = await requestJSON(
-        "getNumUsers",
-        `dataset=${this.state.AppSettings.currentDataset}`
-      );
-      const visibleUsers = {
-        min: this.state.AppSettings.visibleUsers.min,
-        max: numUsers.numUsers,
-        value: Math.min(100, numUsers.numUsers),
-      };
-      this.setState({
-        AppSettings: { ...this.state.AppSettings, visibleUsers },
-      });
-      await this.loadData(totalTime);
+      // load the dataset the first time app is loaded
+      await this.reload();
     }
+  }
+  async reload(config = {}) {
+    this.setState({
+      AppSettings: {
+        ...this.state.AppSettings,
+        ...config,
+      },
+    });
+    const numUsers = await requestJSON(
+      "getNumUsers",
+      `dataset=${this.state.AppSettings.currentDataset}`
+    );
+    const visibleUsers = {
+      min: this.state.AppSettings.visibleUsers.min,
+      max: numUsers.numUsers,
+      value: Math.min(100, numUsers.numUsers),
+    };
+    this.setState({
+      AppSettings: { ...this.state.AppSettings, visibleUsers },
+    });
+
+    await this.loadData();
   }
 
   resetSelected() {
@@ -215,10 +221,6 @@ export default class CustomD3 extends React.Component {
         [key]: value,
       },
     });
-
-    if (key == "currentDataset") {
-      console.log("dataset updated to", value);
-    }
   }
 
   render() {
@@ -228,6 +230,7 @@ export default class CustomD3 extends React.Component {
           <ConfigPanel
             config={this.state.AppSettings}
             updateConfig={this.updateAppSettings}
+            reloadCharts={this.reload}
           />
           <span> MORPHEUS | Digital Fingerprint </span>
           <div style={{ float: "right", margin: "0" }}>

@@ -47,6 +47,10 @@ function SidePanel({ allEvents, anomalousColorThreshold, dataset }) {
   const handleClose = () => setShow(false);
 
   useEffect(() => {
+    setSelectedEventData({});
+  }, [dataset]);
+
+  useEffect(() => {
     const fetchData = async () => {
       if (dataset !== "") {
         const result = await requestJSON(
@@ -54,14 +58,13 @@ function SidePanel({ allEvents, anomalousColorThreshold, dataset }) {
           dataset,
           `index=${selectedEvent}`
         );
-        console.log(result);
         if (result.result) {
           setSelectedEventData(result.result[0]);
         }
       }
     };
     fetchData().catch((e) => console.log(e));
-  }, [selectedEvent, dataset]);
+  }, [selectedEvent]);
 
   useEffect(() => {
     if (allEvents.length > 0) {

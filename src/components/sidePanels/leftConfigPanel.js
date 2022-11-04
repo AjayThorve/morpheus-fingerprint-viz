@@ -55,7 +55,7 @@ async function requestJSON(type = "getFiles", params = null) {
     .catch((e) => console.log(e));
 }
 
-function ConfigPanel({ config, updateConfig }) {
+function ConfigPanel({ config, updateConfig, reloadCharts }) {
   const [show, setShow] = useState(false);
   const [datasets, setDatasets] = useState([]);
   const [reload, clickReload] = useState(false);
@@ -201,20 +201,16 @@ function ConfigPanel({ config, updateConfig }) {
               defaultValue={config.visibleUsers.value}
               onChange={(e) => {
                 setConfigValues({ ...configValues, visibleUsers: e });
-                updateConfig("visibleUsers", {
-                  ...config.visibleUsers,
-                  value: e,
-                });
               }}
               handleStyle={handleStyle}
               trackStyle={trackStyle}
               railStyle={railStyle}
               marks={{
-                [config.visibleUsers.value]: {
+                [configValues.visibleUsers]: {
                   style: {
                     color: "white",
                   },
-                  label: <span>{config.visibleUsers.value}</span>,
+                  label: <span>{configValues.visibleUsers}</span>,
                 },
               }}
             />
@@ -336,6 +332,9 @@ function ConfigPanel({ config, updateConfig }) {
               variant="secondary"
               size="sm"
               className={styles.configButton}
+              onClick={() => {
+                reloadCharts(config);
+              }}
             >
               Apply
             </Button>
