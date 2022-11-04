@@ -22,6 +22,7 @@ import "rc-slider/assets/index.css";
 import Form from "react-bootstrap/Form";
 import styles from "../../styles/components/sidePanels.module.css";
 import { ArrowClockwise } from "react-bootstrap-icons";
+import { Button } from "react-bootstrap";
 
 const handleStyle = {
   borderColor: "white",
@@ -157,7 +158,7 @@ function ConfigPanel({ config, updateConfig }) {
           >
             <div className={styles.configTitle}>Anomalous Color Threshold</div>
             <Slider
-              className={`${styles.configSliders}`}
+              className={`${styles.configSlider}`}
               range
               min={0}
               max={100}
@@ -194,7 +195,7 @@ function ConfigPanel({ config, updateConfig }) {
           >
             <div className={styles.configTitle}>Visible Users (Rows)</div>
             <Slider
-              className={`${styles.configSliders}`}
+              className={`${styles.configSlider}`}
               min={config.visibleUsers.min}
               max={config.visibleUsers.max}
               defaultValue={config.visibleUsers.value}
@@ -224,7 +225,7 @@ function ConfigPanel({ config, updateConfig }) {
           >
             <div className={styles.configTitle}>Sort Frequency</div>
             <Slider
-              className={`${styles.configSliders}`}
+              className={`${styles.configSlider}`}
               min={0}
               max={60}
               defaultValue={configValues.sortFrequency}
@@ -251,7 +252,7 @@ function ConfigPanel({ config, updateConfig }) {
           >
             <div className={styles.configTitle}>Update Frequency</div>
             <Slider
-              className={`${styles.configSliders}`}
+              className={`${styles.configSlider}`}
               min={0}
               max={300}
               defaultValue={configValues.updateFrequency}
@@ -278,7 +279,7 @@ function ConfigPanel({ config, updateConfig }) {
           >
             <div className={styles.configTitle}>Time Bin Per Hexagon</div>
             <Slider
-              className={`${styles.configSliders}`}
+              className={`${styles.configSlider}`}
               min={configValues.timePerHexRange[0]}
               max={configValues.timePerHexRange[1]}
               defaultValue={configValues.timePerHex}
@@ -305,7 +306,7 @@ function ConfigPanel({ config, updateConfig }) {
           >
             <div className={styles.configTitle}>Look Back Time</div>
             <Slider
-              className={`${styles.configSliders}`}
+              className={`${styles.configSlider}`}
               min={configValues.lookBackTimeRange[0]}
               max={configValues.lookBackTimeRange[1]}
               defaultValue={configValues.lookBackTime}
@@ -326,6 +327,21 @@ function ConfigPanel({ config, updateConfig }) {
               }}
             />
           </ListGroup.Item>
+
+          <ListGroup.Item
+            className={styles.listOfAttributes}
+            key={"applySettings"}
+          >
+            <Button
+              variant="secondary"
+              size="sm"
+              className={styles.configButton}
+            >
+              Apply
+            </Button>
+          </ListGroup.Item>
+          <div className={styles.underline}></div>
+          <br></br>
           <ListGroup.Item
             className={styles.listOfAttributes}
             key={"liveUpdates"}

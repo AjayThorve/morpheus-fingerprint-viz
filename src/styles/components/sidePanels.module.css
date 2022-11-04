@@ -63,10 +63,16 @@
   color: white;
 }
 
-.configSliders {
+.configSlider {
   background-color: #0f0f0f;
   width: 88% !important;
   margin-left: 5% !important;
+}
+
+.configButton {
+  width: 50% !important;
+  margin-right: 5% !important;
+  float: right;
 }
 
 .configSwitch {
