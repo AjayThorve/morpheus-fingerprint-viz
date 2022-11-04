@@ -34,7 +34,7 @@ async function requestJSON(type = "getEventByIndex", dataset, params = null) {
 function getColorPaletteStyle(threshold) {
   return `linear-gradient(
     90deg,
-    rgb(33, 33, 33, 1) ${threshold[0] * 100 - 1}%,
+    rgb(111, 111, 111, 1) ${threshold[0] * 100 - 1}%,
     rgba(255, 0, 0, 1) ${threshold[0] * 100}%,
     rgba(255, 255, 0, 1) ${threshold[1] * 100}%
   )`;
